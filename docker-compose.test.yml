@@ -1,0 +1,48 @@
+# =============================================================================
+# mcp-sync Test Orchestration
+# =============================================================================
+# Docker Compose configuration for running E2E tests in isolation.
+#
+# Usage:
+#   # Run all E2E tests
+#   docker compose -f docker-compose.test.yml up --build
+#
+#   # Run tests interactively
+#   docker compose -f docker-compose.test.yml run --rm e2e bash
+#
+#   # Run specific test file
+#   docker compose -f docker-compose.test.yml run --rm e2e npm run test:e2e -- cli.e2e.test.ts
+#
+#   # Clean up
+#   docker compose -f docker-compose.test.yml down --volumes --rmi local
+# =============================================================================
+
+services:
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      # Mount test results for CI/local viewing
+      - ./test-results:/app/test-results
+    environment:
+      # Ensure clean, predictable test environment
+      - HOME=/home/testuser
+      - NODE_ENV=test
+      # Disable color output for cleaner CI logs (optional)
+      - NO_COLOR=${NO_COLOR:-}
+      # Test-specific env vars for MCP servers
+      - TEST_API_KEY=test-secret-key-12345
+      - GITHUB_TOKEN=ghp_test_token_for_testing
+    # Prevent container from exiting immediately for debugging
+    stdin_open: true
+    tty: true
+
+  # Optional: Run unit tests separately (faster, no E2E)
+  unit:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: npm run test:unit
+    environment:
+      - NODE_ENV=test
