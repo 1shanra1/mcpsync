@@ -8,6 +8,7 @@ import { listCommand } from './commands/list.js';
 import { pushCommand } from './commands/push.js';
 import { agentsCommand } from './commands/agents.js';
 import { doctorCommand } from './commands/doctor.js';
+import { redactSecrets } from './utils/redact.js';
 
 // =============================================================================
 // CLI Setup
@@ -85,7 +86,7 @@ program
 
     console.log(chalk.bold(`\n${name}`));
     console.log(chalk.gray('─'.repeat(40)));
-    console.log(JSON.stringify(server, null, 2));
+    console.log(JSON.stringify(redactSecrets(server), null, 2));
   });
 
 program
@@ -115,6 +116,7 @@ program
   .command('push [agent]')
   .description('Sync config to agents')
   .option('--scope <scope>', 'Config scope (global, project, local)', 'global')
+  .option('--merge', 'Merge with existing servers instead of replacing')
   .action(pushCommand);
 
 program

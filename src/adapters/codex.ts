@@ -9,6 +9,7 @@ import {
   DetectionResult,
   AgentMcpConfig,
   SyncResult,
+  WriteOptions,
 } from './base.js';
 import {
   CanonicalConfig,
@@ -128,8 +129,9 @@ export class CodexAdapter extends BaseAdapter {
 
   async write(
     config: CanonicalConfig,
-    _scope: 'global' | 'project' | 'local' = 'global'
+    options: WriteOptions = {}
   ): Promise<SyncResult> {
+    const { merge = false } = options;
     const paths = this.getConfigPaths();
     const warnings: string[] = [];
 
@@ -169,11 +171,15 @@ export class CodexAdapter extends BaseAdapter {
       }
     }
 
-    // Merge MCP servers
-    existingConfig.mcp_servers = {
-      ...existingConfig.mcp_servers,
-      ...codexServers,
-    };
+    // Replace mcp_servers entirely (authoritative sync) unless merge mode is enabled
+    if (merge) {
+      existingConfig.mcp_servers = {
+        ...existingConfig.mcp_servers,
+        ...codexServers,
+      };
+    } else {
+      existingConfig.mcp_servers = codexServers;
+    }
 
     // Write TOML
     const tomlContent = TOML.stringify(existingConfig);
@@ -234,6 +240,19 @@ export class CodexAdapter extends BaseAdapter {
       url: server.url,
     };
 
+    // Handle bearer auth - extract from Authorization header
+    // Supports both "${TOKEN}" and "Bearer ${TOKEN}" patterns
+    if (server.auth === 'bearer') {
+      const authHeader = server.headers?.['Authorization'];
+      if (authHeader) {
+        // Match ${VAR} or ${VAR:-default} anywhere in the header value
+        const envVarMatch = authHeader.match(/\$\{([^}:-]+)(?::-[^}]*)?\}/);
+        if (envVarMatch) {
+          result.bearer_token_env_var = envVarMatch[1];
+        }
+      }
+    }
+
     // Handle headers - Codex uses http_headers for static values
     // and env_http_headers for values from env vars
     const staticHeaders: Record<string, string> = {};
@@ -241,6 +260,10 @@ export class CodexAdapter extends BaseAdapter {
 
     if (server.headers) {
       for (const [key, value] of Object.entries(server.headers)) {
+        // Skip Authorization header if we already handled it as bearer token
+        if (key === 'Authorization' && result.bearer_token_env_var) {
+          continue;
+        }
         if (value.startsWith('${') && value.endsWith('}')) {
           // Extract env var name from ${VAR_NAME}
           const envVar = value.slice(2, -1).split(':-')[0];

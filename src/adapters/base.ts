@@ -50,6 +50,11 @@ export interface AgentMcpConfig {
   raw: unknown; // Original parsed file
 }
 
+export interface WriteOptions {
+  scope?: 'global' | 'project' | 'local';
+  merge?: boolean;
+}
+
 // =============================================================================
 // Base Adapter
 // =============================================================================
@@ -77,7 +82,7 @@ export abstract class BaseAdapter {
   /**
    * Write the canonical config to the agent's config file
    */
-  abstract write(config: CanonicalConfig, scope?: 'global' | 'project' | 'local'): Promise<SyncResult>;
+  abstract write(config: CanonicalConfig, options?: WriteOptions): Promise<SyncResult>;
 
   /**
    * Validate if the canonical config can be written to this agent
@@ -115,6 +120,25 @@ export abstract class BaseAdapter {
             server: serverName,
           });
         }
+      }
+
+      // Check autoApprove usage (server-level or inherited from defaults)
+      const effectiveAutoApprove = server.autoApprove ?? config.defaults?.autoApprove;
+      if (effectiveAutoApprove && !this.capabilities.supportsAutoApprove) {
+        issues.push({
+          type: 'warning',
+          message: `${this.displayName} does not support autoApprove (will be ignored)`,
+          server: serverName,
+        });
+      }
+
+      // Check bearer auth
+      if (server.type === 'http' && server.auth === 'bearer') {
+        issues.push({
+          type: 'warning',
+          message: `${this.displayName}: bearer auth requires manual header configuration`,
+          server: serverName,
+        });
       }
     }
 

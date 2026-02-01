@@ -73,7 +73,7 @@ export const ServerSchema = z.discriminatedUnion('type', [
  */
 export const AgentConfigSchema = z.object({
   enabled: z.boolean().default(true),
-  scope: z.enum(['user', 'project', 'local']).optional().default('user'),
+  scope: z.enum(['global', 'project', 'local']).optional().default('global'),
 });
 
 /**

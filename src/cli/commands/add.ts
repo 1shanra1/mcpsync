@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { input, select, confirm } from '@inquirer/prompts';
 import { ConfigManager, createStdioServer, createHttpServer } from '../../core/config.js';
 import { StdioServer, HttpServer } from '../../core/schema.js';
+import { redactSecrets } from '../utils/redact.js';
 
 interface AddOptions {
   type?: 'stdio' | 'http';
@@ -53,7 +54,7 @@ export async function addCommand(
 
     // Show what was added
     console.log(chalk.gray('\nServer configuration:'));
-    console.log(chalk.gray(JSON.stringify(server, null, 2)));
+    console.log(chalk.gray(JSON.stringify(redactSecrets(server), null, 2)));
 
     console.log(chalk.cyan('\nRun ') + chalk.bold('mcp-sync push') + chalk.cyan(' to sync to all agents'));
 

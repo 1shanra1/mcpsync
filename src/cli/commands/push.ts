@@ -6,6 +6,7 @@ import { SupportedAgent } from '../../core/schema.js';
 
 interface PushOptions {
   scope?: 'global' | 'project' | 'local';
+  merge?: boolean;
 }
 
 export async function pushCommand(
@@ -105,7 +106,7 @@ export async function pushCommand(
       // Write config
       try {
         const scope = options.scope ?? (agentConfig?.scope as 'global' | 'project' | 'local') ?? 'global';
-        const result = await adapter.write(config, scope);
+        const result = await adapter.write(config, { scope, merge: options.merge });
 
         if (result.success) {
           spinner.succeed(`${adapter.displayName} ${chalk.gray(`(${result.serversWritten} servers)`)}`);

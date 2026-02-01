@@ -8,6 +8,7 @@ import {
   DetectionResult,
   AgentMcpConfig,
   SyncResult,
+  WriteOptions,
 } from './base.js';
 import {
   CanonicalConfig,
@@ -122,8 +123,9 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 
   async write(
     config: CanonicalConfig,
-    scope: 'global' | 'project' | 'local' = 'global'
+    options: WriteOptions = {}
   ): Promise<SyncResult> {
+    const { scope = 'global', merge = false } = options;
     const paths = this.getConfigPaths();
     const warnings: string[] = [];
 
@@ -157,7 +159,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       }
     }
 
-    // Merge MCP servers
+    // Write MCP servers
     if (scope === 'project') {
       // Write to .mcp.json
       const projectConfig = {
@@ -166,10 +168,15 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       writeFileSync(configPath, JSON.stringify(projectConfig, null, 2) + '\n');
     } else {
       // Write to ~/.claude.json
-      existingConfig.mcpServers = {
-        ...existingConfig.mcpServers,
-        ...claudeServers,
-      };
+      // Replace mcpServers entirely (authoritative sync) unless merge mode is enabled
+      if (merge) {
+        existingConfig.mcpServers = {
+          ...existingConfig.mcpServers,
+          ...claudeServers,
+        };
+      } else {
+        existingConfig.mcpServers = claudeServers;
+      }
       writeFileSync(configPath, JSON.stringify(existingConfig, null, 2) + '\n');
     }
 

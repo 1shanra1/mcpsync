@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { table } from 'table';
 import { ConfigManager } from '../../core/config.js';
+import { redactSecrets } from '../utils/redact.js';
 
 interface ListOptions {
   json?: boolean;
@@ -33,7 +34,7 @@ export async function listCommand(
       for (const { name, server } of servers) {
         output[name] = server;
       }
-      console.log(JSON.stringify(output, null, 2));
+      console.log(JSON.stringify(redactSecrets(output), null, 2));
       return;
     }
 
