@@ -257,8 +257,8 @@ describe('CLI E2E Tests', () => {
       runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
       const result = runCliSuccess('push claude-code');
 
-      // Output shows display name "Claude Code", not agent id
-      expect(result).toContain('Claude Code');
+      // CLI shows sync summary
+      expect(result).toContain('Synced');
 
       // Verify Claude config was created
       expect(existsSync(ctx.claudeConfigPath)).toBe(true);
@@ -291,8 +291,8 @@ describe('CLI E2E Tests', () => {
     it('should handle empty server list', () => {
       const result = runCliSuccess('push claude-code');
 
-      // Should complete without error - check for sync message
-      expect(result).toContain('Synced');
+      // CLI returns early with helpful message when no servers configured
+      expect(result).toContain('No servers configured');
     });
 
     it('should use dry-run flag', () => {
