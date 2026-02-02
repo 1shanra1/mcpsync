@@ -100,6 +100,84 @@ describe('redactSecrets', () => {
     });
   });
 
+  describe('bare $VAR patterns', () => {
+    it('should redact uppercase $VAR', () => {
+      expect(redactSecrets('token is $GITHUB_TOKEN')).toBe('token is [REDACTED]');
+    });
+
+    it('should redact $VAR with underscores', () => {
+      expect(redactSecrets('using $MY_API_KEY here')).toBe('using [REDACTED] here');
+    });
+
+    it('should NOT redact lowercase $var (likely not env var)', () => {
+      // Lowercase vars are unlikely to be env vars, avoid false positives
+      expect(redactSecrets('$variable')).toBe('$variable');
+    });
+
+    it('should NOT redact money strings like $5.00', () => {
+      // Numbers after $ are not env vars
+      expect(redactSecrets('price is $5.00')).toBe('price is $5.00');
+      expect(redactSecrets('costs $100')).toBe('costs $100');
+    });
+  });
+
+  describe('{env:VAR} patterns', () => {
+    it('should redact {env:VAR} format', () => {
+      expect(redactSecrets('key: {env:API_KEY}')).toBe('key: [REDACTED]');
+    });
+
+    it('should redact multiple {env:*} patterns', () => {
+      expect(redactSecrets('{env:A} and {env:B}')).toBe('[REDACTED] and [REDACTED]');
+    });
+  });
+
+  describe('sensitive key names', () => {
+    it('should redact values for keys containing TOKEN', () => {
+      const obj = { GITHUB_TOKEN: 'actual-secret-value' };
+      expect(redactSecrets(obj)).toEqual({ GITHUB_TOKEN: '[REDACTED]' });
+    });
+
+    it('should redact values for keys containing SECRET', () => {
+      const obj = { MY_SECRET: 'shhh' };
+      expect(redactSecrets(obj)).toEqual({ MY_SECRET: '[REDACTED]' });
+    });
+
+    it('should redact values for keys containing PASSWORD', () => {
+      const obj = { DB_PASSWORD: 'hunter2' };
+      expect(redactSecrets(obj)).toEqual({ DB_PASSWORD: '[REDACTED]' });
+    });
+
+    it('should redact values for keys containing KEY', () => {
+      const obj = { API_KEY: 'sk-1234567890' };
+      expect(redactSecrets(obj)).toEqual({ API_KEY: '[REDACTED]' });
+    });
+
+    it('should redact values for keys containing CREDENTIAL', () => {
+      const obj = { AWS_CREDENTIAL: 'secret-cred' };
+      expect(redactSecrets(obj)).toEqual({ AWS_CREDENTIAL: '[REDACTED]' });
+    });
+
+    it('should redact values for keys containing AUTH', () => {
+      const obj = { AUTH_HEADER: 'Bearer xyz' };
+      expect(redactSecrets(obj)).toEqual({ AUTH_HEADER: '[REDACTED]' });
+    });
+
+    it('should NOT redact non-sensitive keys', () => {
+      const obj = { name: 'github', command: 'npx' };
+      expect(redactSecrets(obj)).toEqual({ name: 'github', command: 'npx' });
+    });
+
+    it('should be case-insensitive for key matching', () => {
+      const obj = { api_key: 'secret123' };
+      expect(redactSecrets(obj)).toEqual({ api_key: '[REDACTED]' });
+    });
+
+    it('should only redact string values for sensitive keys', () => {
+      const obj = { TOKEN_COUNT: 42, SECRET_ENABLED: true };
+      expect(redactSecrets(obj)).toEqual({ TOKEN_COUNT: 42, SECRET_ENABLED: true });
+    });
+  });
+
   describe('real-world configs', () => {
     it('should redact a typical MCP server config', () => {
       const input = {
@@ -133,7 +211,8 @@ describe('redactSecrets', () => {
       const result = redactSecrets(input) as Record<string, unknown>;
       const headers = result.headers as Record<string, string>;
 
-      expect(headers.Authorization).toBe('Bearer [REDACTED]');
+      // Authorization key contains "AUTH", so entire value is redacted
+      expect(headers.Authorization).toBe('[REDACTED]');
       expect(headers['X-Custom-Header']).toBe('static-value');
     });
   });

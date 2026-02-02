@@ -1,8 +1,9 @@
-import { writeFileSync, renameSync, copyFileSync, existsSync, unlinkSync } from 'fs';
+import { writeFileSync, renameSync, copyFileSync, existsSync, unlinkSync, chmodSync } from 'fs';
 
 /**
  * Write file atomically using temp file + rename pattern.
  * Creates backup of existing file before overwrite.
+ * Backup files are always created with 0600 permissions for security.
  */
 export function atomicWrite(
   path: string,
@@ -16,6 +17,9 @@ export function atomicWrite(
   if (backup && existsSync(path)) {
     backupPath = `${path}.bak`;
     copyFileSync(path, backupPath);
+    // Ensure backup has restrictive permissions (owner read/write only)
+    // This may differ from original file permissions - documented behavior
+    chmodSync(backupPath, 0o600);
   }
 
   // Write to temp file
