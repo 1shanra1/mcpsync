@@ -53,11 +53,18 @@ export async function pushCommand(
         process.exit(1);
       }
 
-      const detection = await adapter.detect();
-      if (!detection.installed) {
-        console.log(chalk.red(`${adapter.displayName} is not installed`));
-        process.exit(1);
+      // Check if agent is installed (unless detection is bypassed for testing)
+      const skipDetect = process.env.MCP_SYNC_SKIP_DETECT === '1';
+
+      if (!skipDetect) {
+        const detection = await adapter.detect();
+        if (!detection.installed) {
+          console.log(chalk.red(`${adapter.displayName} is not installed`));
+          process.exit(1);
+        }
       }
+      // When skipDetect is true, we skip the entire detection block
+      // This avoids external CLI calls in test mode
 
       adaptersToSync = [adapter];
     }

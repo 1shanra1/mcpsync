@@ -33,11 +33,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Claude Code CLI (npm method - works in containers)
 # See: https://www.npmjs.com/package/@anthropic-ai/claude-code
-RUN npm install -g @anthropic-ai/claude-code || echo "Claude Code CLI installation skipped (optional)"
+# Note: Install is mandatory for E2E tests - build fails if unavailable
+RUN npm install -g @anthropic-ai/claude-code
 
 # Install OpenAI Codex CLI
 # See: https://www.npmjs.com/package/@openai/codex
-RUN npm install -g @openai/codex || echo "Codex CLI installation skipped (optional)"
+# Note: Install is mandatory for E2E tests - build fails if unavailable
+RUN npm install -g @openai/codex
 
 # =============================================================================
 # Create test user with clean home directory

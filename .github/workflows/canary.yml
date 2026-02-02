@@ -1,0 +1,105 @@
+name: Canary Tests
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      skip_notification:
+        description: 'Skip failure notification'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  canary-tier2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create test results directory
+        run: mkdir -p test-results
+
+      - name: Build test image
+        run: docker compose -f docker-compose.test.yml build e2e
+
+      - name: Run Tier 2 E2E tests (real detection)
+        id: e2e-tier2
+        run: |
+          docker compose -f docker-compose.test.yml run --rm e2e npm run test:e2e:tier2
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: canary-test-results-${{ github.run_id }}
+          path: test-results/
+          retention-days: 30
+
+      - name: Create issue on failure
+        if: steps.e2e-tier2.outcome == 'failure' && !inputs.skip_notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[Canary] E2E Tests Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `## Canary Test Failure
+
+            The nightly canary tests detected a potential issue.
+
+            **Run:** [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            **Possible Causes:**
+            - Upstream CLI config format changed
+            - CLI detection behavior changed
+            - Environment drift
+
+            **Action:** Review test artifacts and update adapters if needed.`;
+
+            // Check for existing open canary issues to avoid duplicates
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: 'github-actions[bot]'
+            });
+
+            const hasRecentCanaryIssue = existing.data.some(issue =>
+              issue.title.startsWith('[Canary]') &&
+              new Date(issue.created_at) > new Date(Date.now() - 24*60*60*1000)
+            );
+
+            if (!hasRecentCanaryIssue) {
+              // Try to create with labels, fall back to no labels if they don't exist
+              try {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: title,
+                  body: body,
+                  labels: ['canary-failure', 'automated']
+                });
+              } catch (labelError) {
+                // Labels may not exist - create issue without them
+                console.log('Creating issue without labels:', labelError.message);
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: title,
+                  body: body
+                });
+              }
+            }
+
+      - name: Fail workflow if tests failed
+        if: steps.e2e-tier2.outcome == 'failure'
+        run: exit 1

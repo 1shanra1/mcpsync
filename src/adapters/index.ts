@@ -61,17 +61,42 @@ class AdapterRegistry {
 
   /**
    * Detect all installed agents
+   *
+   * If MCP_SYNC_SKIP_DETECT=1 is set, non-stub adapters report as installed.
+   * This is used for fixture-based E2E testing where real CLI detection
+   * would make tests non-deterministic.
+   *
+   * IMPORTANT: Stub adapters always report installed: false even with skip detect,
+   * because their write() method throws "not implemented" errors.
+   *
+   * MCP_SYNC_SKIP_DETECT: For CI/testing only. Makes all non-stub adapters
+   * report installed: true, bypassing real CLI detection. This allows
+   * fixture-based E2E tests to run without requiring actual CLI installations.
+   * Do NOT use in production - it masks real detection issues.
    */
   async detectAll(): Promise<Map<SupportedAgent, Awaited<ReturnType<BaseAdapter['detect']>>>> {
     const results = new Map<SupportedAgent, Awaited<ReturnType<BaseAdapter['detect']>>>();
+    const skipDetect = process.env.MCP_SYNC_SKIP_DETECT === '1';
 
     for (const [name, adapter] of this.adapters) {
       try {
-        const detection = await adapter.detect();
-        results.set(name, detection);
+        // Never skip detect for stub adapters - they can't write configs
+        const isStub = adapter instanceof StubAdapter;
+
+        if (skipDetect && !isStub) {
+          // Bypass detection for testing - report as installed
+          results.set(name, {
+            installed: true,
+            configExists: false,
+            configPath: adapter.getConfigPaths().global ?? adapter.getConfigPaths().project,
+          });
+        } else {
+          const detection = await adapter.detect();
+          results.set(name, detection);
+        }
       } catch {
         results.set(name, {
-          installed: false,
+          installed: false, // On error, always report not installed
           configExists: false,
           configPath: undefined,
         });
