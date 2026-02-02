@@ -27,6 +27,8 @@ export interface TestContext {
   configPath: string;
   claudeConfigPath: string;
   codexConfigPath: string;
+  geminiConfigPath: string;
+  rooConfigPath: string;
 }
 
 // =============================================================================
@@ -104,6 +106,8 @@ export function getTestContext(): TestContext {
     configPath: join(configDir, 'config.yaml'),
     claudeConfigPath: join(home, '.claude.json'),
     codexConfigPath: join(home, '.codex', 'config.toml'),
+    geminiConfigPath: join(home, '.gemini', 'settings.json'),
+    rooConfigPath: '.roo/mcp.json', // Project-scoped
   };
 }
 
@@ -133,6 +137,24 @@ export function cleanupTestConfigs(): void {
   const codexDir = join(ctx.home, '.codex');
   if (existsSync(codexDir)) {
     rmSync(codexDir, { recursive: true });
+  }
+
+  // Remove Gemini config
+  if (existsSync(ctx.geminiConfigPath)) {
+    rmSync(ctx.geminiConfigPath);
+  }
+  const geminiDir = join(ctx.home, '.gemini');
+  if (existsSync(geminiDir)) {
+    rmSync(geminiDir, { recursive: true });
+  }
+
+  // Remove Roo config (project-scoped)
+  if (existsSync(ctx.rooConfigPath)) {
+    rmSync(ctx.rooConfigPath);
+  }
+  const rooDir = '.roo';
+  if (existsSync(rooDir)) {
+    rmSync(rooDir, { recursive: true });
   }
 }
 
@@ -231,4 +253,46 @@ export function getClaudeServer(
   const servers = config.mcpServers as Record<string, unknown> | undefined;
   if (!servers) return null;
   return (servers[serverName] as Record<string, unknown>) ?? null;
+}
+
+/**
+ * Read Gemini CLI config file
+ */
+export function readGeminiConfig(ctx: TestContext): Record<string, unknown> | null {
+  if (!existsSync(ctx.geminiConfigPath)) {
+    return null;
+  }
+  const content = readFileSync(ctx.geminiConfigPath, 'utf-8');
+  return JSON.parse(content);
+}
+
+/**
+ * Read Roo Code config file
+ */
+export function readRooConfig(ctx: TestContext): Record<string, unknown> | null {
+  if (!existsSync(ctx.rooConfigPath)) {
+    return null;
+  }
+  const content = readFileSync(ctx.rooConfigPath, 'utf-8');
+  return JSON.parse(content);
+}
+
+/**
+ * Check if a server exists in Gemini config
+ */
+export function geminiHasServer(ctx: TestContext, serverName: string): boolean {
+  const config = readGeminiConfig(ctx);
+  if (!config) return false;
+  const servers = config.mcpServers as Record<string, unknown> | undefined;
+  return servers ? serverName in servers : false;
+}
+
+/**
+ * Check if a server exists in Roo config
+ */
+export function rooHasServer(ctx: TestContext, serverName: string): boolean {
+  const config = readRooConfig(ctx);
+  if (!config) return false;
+  const servers = config.mcpServers as Record<string, unknown> | undefined;
+  return servers ? serverName in servers : false;
 }

@@ -135,6 +135,15 @@ export abstract class BaseAdapter {
           server: serverName,
         });
       }
+
+      // Check cwd support
+      if (server.type === 'stdio' && server.cwd && !this.capabilities.supportsCwd) {
+        issues.push({
+          type: 'warning',
+          message: `${this.displayName} does not support cwd (working directory will be ignored)`,
+          server: serverName,
+        });
+      }
     }
 
     return {

@@ -24,6 +24,7 @@ export class StubAdapter extends BaseAdapter {
     supportsAutoApprove: false,
     supportsTimeout: false,
     supportsProjectScope: false,
+    supportsCwd: false,
   };
 
   constructor(name: SupportedAgent, displayName: string) {

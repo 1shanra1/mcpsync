@@ -69,6 +69,7 @@ export class CodexAdapter extends BaseAdapter {
     supportsAutoApprove: false,
     supportsTimeout: true,
     supportsProjectScope: false,
+    supportsCwd: false,
   };
 
   getConfigPaths(): ConfigPaths {

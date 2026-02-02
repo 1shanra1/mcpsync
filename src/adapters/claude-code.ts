@@ -64,6 +64,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
     supportsAutoApprove: false,
     supportsTimeout: true,
     supportsProjectScope: true,
+    supportsCwd: false,
   };
 
   getConfigPaths(): ConfigPaths {

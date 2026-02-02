@@ -157,6 +157,34 @@ describe('Schema Validation', () => {
       const result = StdioServerSchema.safeParse(server);
       expect(result.success).toBe(true);
     });
+
+    it('should accept cwd field', () => {
+      const server = {
+        type: 'stdio',
+        command: 'node',
+        args: ['server.js'],
+        cwd: '/path/to/working/directory',
+      };
+
+      const result = StdioServerSchema.safeParse(server);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.cwd).toBe('/path/to/working/directory');
+      }
+    });
+
+    it('should allow cwd to be optional', () => {
+      const server = {
+        type: 'stdio',
+        command: 'node',
+      };
+
+      const result = StdioServerSchema.safeParse(server);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.cwd).toBeUndefined();
+      }
+    });
   });
 
   // ===========================================================================

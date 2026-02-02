@@ -16,6 +16,8 @@ import {
   setupTestEnvironment,
   cleanupTestConfigs,
   readClaudeConfig,
+  readGeminiConfig,
+  readRooConfig,
   TestContext,
 } from './helpers.js';
 
@@ -209,6 +211,147 @@ describe('Adapter E2E Tests', () => {
   });
 
   // ===========================================================================
+  // Gemini CLI Adapter
+  // ===========================================================================
+
+  describe('Gemini CLI Adapter', () => {
+    it('should produce valid JSON config', () => {
+      runCliSuccess('add test-server --command echo --args hello');
+      runCliSuccess('push gemini-cli');
+
+      expect(existsSync(ctx.geminiConfigPath)).toBe(true);
+
+      // Verify it's valid JSON
+      const content = readFileSync(ctx.geminiConfigPath, 'utf-8');
+      expect(() => JSON.parse(content)).not.toThrow();
+    });
+
+    it('should use correct mcpServers key', () => {
+      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
+      runCliSuccess('push gemini-cli');
+
+      const config = readGeminiConfig(ctx);
+      expect(config).toHaveProperty('mcpServers');
+      expect(config?.mcpServers).toHaveProperty('github');
+    });
+
+    it('should format stdio server correctly for Gemini', () => {
+      runCliSuccess('add myserver --command node --args server.js --args --port --args 3000');
+      runCliSuccess('push gemini-cli');
+
+      const config = readGeminiConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.command).toBe('node');
+      expect(server.args).toEqual(['server.js', '--port', '3000']);
+    });
+
+    it('should include env vars in correct format', () => {
+      runCliSuccess(
+        'add api-server --command node --args server.js --env API_KEY=${API_KEY} --env DEBUG=true'
+      );
+      runCliSuccess('push gemini-cli');
+
+      const config = readGeminiConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers['api-server'] as Record<string, unknown>;
+      const env = server.env as Record<string, string>;
+
+      expect(env.API_KEY).toBe('${API_KEY}');
+      expect(env.DEBUG).toBe('true');
+    });
+
+    it('should format HTTP server with httpUrl field', () => {
+      runCliSuccess('add remote --type http --url https://mcp.example.com/v1');
+      runCliSuccess('push gemini-cli');
+
+      const config = readGeminiConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers.remote as Record<string, unknown>;
+
+      expect(server.httpUrl).toBe('https://mcp.example.com/v1');
+    });
+  });
+
+  // ===========================================================================
+  // Roo Code Adapter
+  // ===========================================================================
+
+  describe('Roo Code Adapter', () => {
+    it('should produce valid JSON config', () => {
+      runCliSuccess('add test-server --command echo --args hello');
+      runCliSuccess('push roo-code --scope project');
+
+      expect(existsSync(ctx.rooConfigPath)).toBe(true);
+
+      // Verify it's valid JSON
+      const content = readFileSync(ctx.rooConfigPath, 'utf-8');
+      expect(() => JSON.parse(content)).not.toThrow();
+    });
+
+    it('should use correct mcpServers key', () => {
+      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
+      runCliSuccess('push roo-code --scope project');
+
+      const config = readRooConfig(ctx);
+      expect(config).toHaveProperty('mcpServers');
+      expect(config?.mcpServers).toHaveProperty('github');
+    });
+
+    it('should format stdio server correctly for Roo', () => {
+      runCliSuccess('add myserver --command node --args server.js');
+      runCliSuccess('push roo-code --scope project');
+
+      const config = readRooConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.command).toBe('node');
+      expect(server.args).toEqual(['server.js']);
+    });
+
+    it('should transform env vars to Roo format', () => {
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('push roo-code --scope project');
+
+      const config = readRooConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers['api-server'] as Record<string, unknown>;
+      const env = server.env as Record<string, string>;
+
+      // Should be transformed to Roo format ${env:VAR}
+      expect(env.API_KEY).toBe('${env:API_KEY}');
+    });
+
+    it('should format HTTP server with type and url', () => {
+      runCliSuccess('add remote --type http --url https://mcp.example.com/v1');
+      runCliSuccess('push roo-code --scope project');
+
+      const config = readRooConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers.remote as Record<string, unknown>;
+
+      expect(server.type).toBe('streamable-http');
+      expect(server.url).toBe('https://mcp.example.com/v1');
+    });
+
+    it('should handle mixed env var formats correctly', () => {
+      // Test that strings with both ${env:VAR} and $VAR patterns are fully transformed
+      runCliSuccess('add mixed-env --command node --args server.js --env MIXED=prefix_$SUFFIX');
+      runCliSuccess('push roo-code --scope project');
+
+      const config = readRooConfig(ctx);
+      const servers = config?.mcpServers as Record<string, unknown>;
+      const server = servers['mixed-env'] as Record<string, unknown>;
+      const env = server.env as Record<string, string>;
+
+      // $SUFFIX should be transformed to ${env:SUFFIX}
+      expect(env.MIXED).toBe('prefix_${env:SUFFIX}');
+    });
+  });
+
+  // ===========================================================================
   // Cross-Agent Sync Tests
   // ===========================================================================
 
@@ -237,6 +380,13 @@ describe('Adapter E2E Tests', () => {
       const codexConfig = TOML.parse(codexContent) as { mcp_servers: Record<string, unknown> };
       expect(codexConfig.mcp_servers).toHaveProperty('github');
       expect(codexConfig.mcp_servers).toHaveProperty('filesystem');
+
+      // Verify Gemini config
+      expect(existsSync(ctx.geminiConfigPath)).toBe(true);
+      const geminiConfig = readGeminiConfig(ctx);
+      const geminiServers = geminiConfig?.mcpServers as Record<string, unknown>;
+      expect(geminiServers).toHaveProperty('github');
+      expect(geminiServers).toHaveProperty('filesystem');
     });
 
     it('should produce equivalent server configs across agents', () => {
@@ -253,14 +403,23 @@ describe('Adapter E2E Tests', () => {
       const codexConfig = TOML.parse(codexContent) as { mcp_servers: Record<string, unknown> };
       const codexServer = codexConfig.mcp_servers['test-mcp'] as Record<string, unknown>;
 
-      // Core fields should match
-      expect(claudeServer.command).toBe(codexServer.command);
-      expect(claudeServer.args).toEqual(codexServer.args);
+      // Get Gemini server config
+      const geminiConfig = readGeminiConfig(ctx);
+      const geminiServers = geminiConfig?.mcpServers as Record<string, unknown>;
+      const geminiServer = geminiServers['test-mcp'] as Record<string, unknown>;
 
-      // Env should have same values
+      // Core fields should match across Claude, Codex, and Gemini
+      expect(claudeServer.command).toBe(codexServer.command);
+      expect(claudeServer.command).toBe(geminiServer.command);
+      expect(claudeServer.args).toEqual(codexServer.args);
+      expect(claudeServer.args).toEqual(geminiServer.args);
+
+      // Env should have same values (canonical format for Claude/Codex/Gemini)
       const claudeEnv = claudeServer.env as Record<string, string>;
       const codexEnv = codexServer.env as Record<string, string>;
+      const geminiEnv = geminiServer.env as Record<string, string>;
       expect(claudeEnv.SECRET).toBe(codexEnv.SECRET);
+      expect(claudeEnv.SECRET).toBe(geminiEnv.SECRET);
     });
   });
 
@@ -281,6 +440,20 @@ describe('Adapter E2E Tests', () => {
 
       // Should show Codex in the list
       expect(result).toContain('codex');
+    });
+
+    it('should show Gemini CLI in agents list', () => {
+      const result = runCliSuccess('agents');
+
+      // Should show Gemini CLI in the list
+      expect(result).toContain('gemini-cli');
+    });
+
+    it('should show Roo Code in agents list', () => {
+      const result = runCliSuccess('agents');
+
+      // Should show Roo Code in the list
+      expect(result).toContain('roo-code');
     });
 
     it('should report agent installation status', () => {

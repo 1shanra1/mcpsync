@@ -42,6 +42,7 @@ export const StdioServerSchema = z.object({
   command: z.string(),
   args: z.array(z.string()).optional().default([]),
   env: EnvSchema.optional().default({}),
+  cwd: z.string().optional(),
   description: z.string().optional(),
   timeout: z.number().optional(),
   autoApprove: AutoApproveSchema.optional(),
@@ -146,6 +147,7 @@ export interface AgentCapabilities {
   supportsAutoApprove: boolean;
   supportsTimeout: boolean;
   supportsProjectScope: boolean;
+  supportsCwd: boolean;
 }
 
 // =============================================================================
