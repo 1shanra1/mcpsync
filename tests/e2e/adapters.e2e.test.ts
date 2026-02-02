@@ -18,6 +18,8 @@ import {
   readClaudeConfig,
   readGeminiConfig,
   readRooConfig,
+  readAmpConfig,
+  readOpenCodeConfig,
   TestContext,
 } from './helpers.js';
 
@@ -352,6 +354,259 @@ describe('Adapter E2E Tests', () => {
   });
 
   // ===========================================================================
+  // Amp Adapter
+  // ===========================================================================
+
+  describe('Amp Adapter', () => {
+    it('should produce valid JSON config', () => {
+      runCliSuccess('add test-server --command echo --args hello');
+      runCliSuccess('push amp');
+
+      expect(existsSync(ctx.ampConfigPath)).toBe(true);
+
+      // Verify it's valid JSON
+      const content = readFileSync(ctx.ampConfigPath, 'utf-8');
+      expect(() => JSON.parse(content)).not.toThrow();
+    });
+
+    it('should use literal amp.mcpServers key (not nested)', () => {
+      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
+      runCliSuccess('push amp');
+
+      const config = readAmpConfig(ctx);
+      // The key should be literally 'amp.mcpServers' as a flat key
+      expect(config).toHaveProperty('amp.mcpServers');
+      expect(config?.['amp.mcpServers']).toHaveProperty('github');
+
+      // Should NOT be nested as amp: { mcpServers: {...} }
+      expect(config).not.toHaveProperty('amp');
+    });
+
+    it('should format stdio server correctly for Amp', () => {
+      runCliSuccess('add myserver --command node --args server.js');
+      runCliSuccess('push amp');
+
+      const config = readAmpConfig(ctx);
+      const servers = config?.['amp.mcpServers'] as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.command).toBe('node');
+      expect(server.args).toEqual(['server.js']);
+    });
+
+    it('should include env vars in canonical ${VAR} format', () => {
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('push amp');
+
+      const config = readAmpConfig(ctx);
+      const servers = config?.['amp.mcpServers'] as Record<string, unknown>;
+      const server = servers['api-server'] as Record<string, unknown>;
+      const env = server.env as Record<string, string>;
+
+      // Amp uses ${VAR} format (compatible with canonical)
+      expect(env.API_KEY).toBe('${API_KEY}');
+    });
+
+    it('should format HTTP server with httpUrl field (Streamable HTTP)', () => {
+      runCliSuccess('add remote --type http --url https://mcp.example.com/v1');
+      runCliSuccess('push amp');
+
+      const config = readAmpConfig(ctx);
+      const servers = config?.['amp.mcpServers'] as Record<string, unknown>;
+      const server = servers.remote as Record<string, unknown>;
+
+      // Should use httpUrl (not url) for Streamable HTTP
+      expect(server.httpUrl).toBe('https://mcp.example.com/v1');
+      expect(server).not.toHaveProperty('url');
+    });
+
+    it('should map enabledTools to includeTools', () => {
+      // First add a server
+      runCliSuccess('add myserver --command node --args server.js');
+
+      // Then manually update config to add agent-specific enabledTools
+      // This would normally be done via config.yaml directly
+      const configPath = ctx.configPath;
+      const configContent = readFileSync(configPath, 'utf-8');
+      const updatedContent = configContent.replace(
+        'myserver:',
+        `myserver:
+    agents:
+      amp:
+        enabledTools:
+          - read_file
+          - write_file`
+      );
+      writeFileSync(configPath, updatedContent);
+
+      runCliSuccess('push amp');
+
+      const config = readAmpConfig(ctx);
+      const servers = config?.['amp.mcpServers'] as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.includeTools).toEqual(['read_file', 'write_file']);
+    });
+  });
+
+  // ===========================================================================
+  // OpenCode Adapter
+  // ===========================================================================
+
+  describe('OpenCode Adapter', () => {
+    it('should produce valid JSON config', () => {
+      runCliSuccess('add test-server --command echo --args hello');
+      runCliSuccess('push opencode --scope project');
+
+      expect(existsSync(ctx.openCodeConfigPath)).toBe(true);
+
+      // Verify it's valid JSON
+      const content = readFileSync(ctx.openCodeConfigPath, 'utf-8');
+      expect(() => JSON.parse(content)).not.toThrow();
+    });
+
+    it('should use mcp key (not mcpServers)', () => {
+      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      // OpenCode uses 'mcp' key, not 'mcpServers'
+      expect(config).toHaveProperty('mcp');
+      expect(config).not.toHaveProperty('mcpServers');
+      expect(config?.mcp).toHaveProperty('github');
+    });
+
+    it('should format stdio server with type: local and command array', () => {
+      runCliSuccess('add myserver --command node --args server.js --args --port --args 3000');
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.type).toBe('local');
+      // Command should be an array combining command and args
+      expect(server.command).toEqual(['node', 'server.js', '--port', '3000']);
+    });
+
+    it('should produce command array with single element when no args', () => {
+      runCliSuccess('add simple --command myserver');
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers.simple as Record<string, unknown>;
+
+      // Should be ["myserver"], not ["myserver", undefined]
+      expect(server.command).toEqual(['myserver']);
+    });
+
+    it('should transform env vars to OpenCode format (${VAR} -> {env:VAR})', () => {
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers['api-server'] as Record<string, unknown>;
+      const environment = server.environment as Record<string, string>;
+
+      // OpenCode uses {env:VAR} format (no dollar sign)
+      expect(environment.API_KEY).toBe('{env:API_KEY}');
+    });
+
+    it('should use environment key (not env)', () => {
+      runCliSuccess('add api-server --command node --env API_KEY=${API_KEY}');
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers['api-server'] as Record<string, unknown>;
+
+      // Should use 'environment', not 'env'
+      expect(server).toHaveProperty('environment');
+      expect(server).not.toHaveProperty('env');
+    });
+
+    it('should format HTTP server with type: remote', () => {
+      runCliSuccess('add remote --type http --url https://mcp.example.com/v1');
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers.remote as Record<string, unknown>;
+
+      expect(server.type).toBe('remote');
+      expect(server.url).toBe('https://mcp.example.com/v1');
+    });
+
+    it('should transform headers env vars to OpenCode format', () => {
+      runCliSuccess(
+        'add remote --type http --url https://example.com --headers Authorization=Bearer\\ ${TOKEN}'
+      );
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers.remote as Record<string, unknown>;
+      const headers = server.headers as Record<string, string>;
+
+      // Should transform ${TOKEN} to {env:TOKEN}
+      expect(headers.Authorization).toBe('Bearer {env:TOKEN}');
+    });
+
+    it('should include disabledTools when specified', () => {
+      // First add a server
+      runCliSuccess('add myserver --command node --args server.js');
+
+      // Manually update config to add agent-specific disabledTools
+      const configPath = ctx.configPath;
+      const configContent = readFileSync(configPath, 'utf-8');
+      const updatedContent = configContent.replace(
+        'myserver:',
+        `myserver:
+    agents:
+      opencode:
+        disabledTools:
+          - dangerous_tool`
+      );
+      writeFileSync(configPath, updatedContent);
+
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.disabledTools).toEqual(['dangerous_tool']);
+    });
+
+    it('should include autoApprove array when specified', () => {
+      // First add a server
+      runCliSuccess('add myserver --command node --args server.js');
+
+      // Manually update config to add autoApprove
+      const configPath = ctx.configPath;
+      const configContent = readFileSync(configPath, 'utf-8');
+      const updatedContent = configContent.replace(
+        'myserver:',
+        `myserver:
+    autoApprove:
+      - tool1
+      - tool2`
+      );
+      writeFileSync(configPath, updatedContent);
+
+      runCliSuccess('push opencode --scope project');
+
+      const config = readOpenCodeConfig(ctx);
+      const servers = config?.mcp as Record<string, unknown>;
+      const server = servers.myserver as Record<string, unknown>;
+
+      expect(server.autoApprove).toEqual(['tool1', 'tool2']);
+    });
+  });
+
+  // ===========================================================================
   // Cross-Agent Sync Tests
   // ===========================================================================
 
@@ -454,6 +709,20 @@ describe('Adapter E2E Tests', () => {
 
       // Should show Roo Code in the list
       expect(result).toContain('roo-code');
+    });
+
+    it('should show Amp in agents list', () => {
+      const result = runCliSuccess('agents');
+
+      // Should show Amp in the list
+      expect(result).toContain('amp');
+    });
+
+    it('should show OpenCode in agents list', () => {
+      const result = runCliSuccess('agents');
+
+      // Should show OpenCode in the list
+      expect(result).toContain('opencode');
     });
 
     it('should report agent installation status', () => {

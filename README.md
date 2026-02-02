@@ -56,8 +56,8 @@ mcp-sync doctor
 | OpenAI Codex | ✅ | TOML | Full support including tool filtering |
 | Gemini CLI | ✅ | JSON | Full support including cwd, tool filtering, trust |
 | Roo Code | ✅ | JSON | Full support with alwaysAllow, env var transform |
-| Amp Code | 🚧 | JSON | Coming soon |
-| OpenCode | 🚧 | JSON | Coming soon |
+| Amp Code | ✅ | JSON | Full support with includeTools, httpUrl for HTTP |
+| OpenCode | ✅ | JSON | Full support with disabledTools, autoApprove, env var transform |
 | Kimi Code | 🚧 | JSON | Coming soon |
 
 ## Commands
@@ -272,7 +272,7 @@ npm run build
 
 Contributions welcome! Areas we need help with:
 
-- **New adapters**: Amp, OpenCode, Kimi Code
+- **New adapters**: Kimi Code
 - **Testing**: Test coverage for adapters
 - **Documentation**: Guides for specific workflows
 

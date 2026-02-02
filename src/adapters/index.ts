@@ -1,7 +1,9 @@
 import { BaseAdapter } from './base.js';
+import { AmpAdapter } from './amp.js';
 import { ClaudeCodeAdapter } from './claude-code.js';
 import { CodexAdapter } from './codex.js';
 import { GeminiCliAdapter } from './gemini-cli.js';
+import { OpenCodeAdapter } from './opencode.js';
 import { RooCodeAdapter } from './roo-code.js';
 import { StubAdapter } from './stub.js';
 import { SupportedAgent } from '../core/schema.js';
@@ -18,14 +20,14 @@ class AdapterRegistry {
 
   constructor() {
     // Register implemented adapters
+    this.register(new AmpAdapter());
     this.register(new ClaudeCodeAdapter());
     this.register(new CodexAdapter());
     this.register(new GeminiCliAdapter());
+    this.register(new OpenCodeAdapter());
     this.register(new RooCodeAdapter());
 
     // Register stub adapters for planned agents
-    this.register(new StubAdapter('amp', 'Amp'));
-    this.register(new StubAdapter('opencode', 'OpenCode'));
     this.register(new StubAdapter('kimi-code', 'Kimi Code'));
   }
 

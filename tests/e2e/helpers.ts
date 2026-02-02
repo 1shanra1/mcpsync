@@ -29,6 +29,8 @@ export interface TestContext {
   codexConfigPath: string;
   geminiConfigPath: string;
   rooConfigPath: string;
+  ampConfigPath: string;
+  openCodeConfigPath: string;
 }
 
 // =============================================================================
@@ -108,6 +110,8 @@ export function getTestContext(): TestContext {
     codexConfigPath: join(home, '.codex', 'config.toml'),
     geminiConfigPath: join(home, '.gemini', 'settings.json'),
     rooConfigPath: '.roo/mcp.json', // Project-scoped
+    ampConfigPath: join(home, '.config', 'amp', 'settings.json'),
+    openCodeConfigPath: 'opencode.json', // Project-scoped
   };
 }
 
@@ -155,6 +159,20 @@ export function cleanupTestConfigs(): void {
   const rooDir = '.roo';
   if (existsSync(rooDir)) {
     rmSync(rooDir, { recursive: true });
+  }
+
+  // Remove Amp config
+  if (existsSync(ctx.ampConfigPath)) {
+    rmSync(ctx.ampConfigPath);
+  }
+  const ampDir = join(ctx.home, '.config', 'amp');
+  if (existsSync(ampDir)) {
+    rmSync(ampDir, { recursive: true });
+  }
+
+  // Remove OpenCode config (project-scoped)
+  if (existsSync(ctx.openCodeConfigPath)) {
+    rmSync(ctx.openCodeConfigPath);
   }
 }
 
@@ -294,5 +312,47 @@ export function rooHasServer(ctx: TestContext, serverName: string): boolean {
   const config = readRooConfig(ctx);
   if (!config) return false;
   const servers = config.mcpServers as Record<string, unknown> | undefined;
+  return servers ? serverName in servers : false;
+}
+
+/**
+ * Read Amp config file
+ */
+export function readAmpConfig(ctx: TestContext): Record<string, unknown> | null {
+  if (!existsSync(ctx.ampConfigPath)) {
+    return null;
+  }
+  const content = readFileSync(ctx.ampConfigPath, 'utf-8');
+  return JSON.parse(content);
+}
+
+/**
+ * Read OpenCode config file
+ */
+export function readOpenCodeConfig(ctx: TestContext): Record<string, unknown> | null {
+  if (!existsSync(ctx.openCodeConfigPath)) {
+    return null;
+  }
+  const content = readFileSync(ctx.openCodeConfigPath, 'utf-8');
+  return JSON.parse(content);
+}
+
+/**
+ * Check if a server exists in Amp config
+ */
+export function ampHasServer(ctx: TestContext, serverName: string): boolean {
+  const config = readAmpConfig(ctx);
+  if (!config) return false;
+  const servers = config['amp.mcpServers'] as Record<string, unknown> | undefined;
+  return servers ? serverName in servers : false;
+}
+
+/**
+ * Check if a server exists in OpenCode config
+ */
+export function openCodeHasServer(ctx: TestContext, serverName: string): boolean {
+  const config = readOpenCodeConfig(ctx);
+  if (!config) return false;
+  const servers = config.mcp as Record<string, unknown> | undefined;
   return servers ? serverName in servers : false;
 }
