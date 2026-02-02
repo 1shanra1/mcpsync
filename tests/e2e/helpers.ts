@@ -117,63 +117,34 @@ export function getTestContext(): TestContext {
 
 /**
  * Clean up all test config files
+ * Uses force: true to handle edge cases in CI environments
  */
 export function cleanupTestConfigs(): void {
   const ctx = getTestContext();
 
-  // Remove mcp-sync config
-  if (existsSync(ctx.configPath)) {
-    rmSync(ctx.configPath);
-  }
-  if (existsSync(ctx.configDir)) {
-    rmSync(ctx.configDir, { recursive: true });
-  }
+  // Remove mcp-sync config directory (includes config.yaml)
+  rmSync(ctx.configDir, { recursive: true, force: true });
 
   // Remove Claude config
-  if (existsSync(ctx.claudeConfigPath)) {
-    rmSync(ctx.claudeConfigPath);
-  }
+  rmSync(ctx.claudeConfigPath, { force: true });
 
   // Remove Codex config
-  if (existsSync(ctx.codexConfigPath)) {
-    rmSync(ctx.codexConfigPath);
-  }
   const codexDir = join(ctx.home, '.codex');
-  if (existsSync(codexDir)) {
-    rmSync(codexDir, { recursive: true });
-  }
+  rmSync(codexDir, { recursive: true, force: true });
 
   // Remove Gemini config
-  if (existsSync(ctx.geminiConfigPath)) {
-    rmSync(ctx.geminiConfigPath);
-  }
   const geminiDir = join(ctx.home, '.gemini');
-  if (existsSync(geminiDir)) {
-    rmSync(geminiDir, { recursive: true });
-  }
+  rmSync(geminiDir, { recursive: true, force: true });
 
   // Remove Roo config (project-scoped)
-  if (existsSync(ctx.rooConfigPath)) {
-    rmSync(ctx.rooConfigPath);
-  }
-  const rooDir = '.roo';
-  if (existsSync(rooDir)) {
-    rmSync(rooDir, { recursive: true });
-  }
+  rmSync('.roo', { recursive: true, force: true });
 
   // Remove Amp config
-  if (existsSync(ctx.ampConfigPath)) {
-    rmSync(ctx.ampConfigPath);
-  }
   const ampDir = join(ctx.home, '.config', 'amp');
-  if (existsSync(ampDir)) {
-    rmSync(ampDir, { recursive: true });
-  }
+  rmSync(ampDir, { recursive: true, force: true });
 
   // Remove OpenCode config (project-scoped)
-  if (existsSync(ctx.openCodeConfigPath)) {
-    rmSync(ctx.openCodeConfigPath);
-  }
+  rmSync(ctx.openCodeConfigPath, { force: true });
 }
 
 /**

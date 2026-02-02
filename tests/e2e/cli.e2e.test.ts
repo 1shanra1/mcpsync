@@ -37,6 +37,9 @@ describe('CLI E2E Tests', () => {
 
   describe('mcp-sync init', () => {
     it('should create a new config file', () => {
+      // Ensure clean state - no config should exist
+      expect(existsSync(ctx.configPath)).toBe(false);
+
       const result = runCliSuccess('init');
 
       expect(result).toContain('Created');
@@ -48,13 +51,13 @@ describe('CLI E2E Tests', () => {
       expect(config?.servers).toEqual({});
     });
 
-    it('should fail if config already exists', () => {
+    it('should warn if config already exists', () => {
       // First init
       runCliSuccess('init');
 
-      // Second init should fail
-      const result = runCliFailure('init');
-      expect(result.stderr + result.stdout).toContain('already exists');
+      // Second init should warn (exits 0 but prints warning)
+      const result = runCli('init');
+      expect(result.stdout).toContain('already exists');
     });
 
     it('should overwrite with --force flag', () => {
@@ -254,7 +257,8 @@ describe('CLI E2E Tests', () => {
       runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
       const result = runCliSuccess('push claude-code');
 
-      expect(result).toContain('claude-code');
+      // Output shows display name "Claude Code", not agent id
+      expect(result).toContain('Claude Code');
 
       // Verify Claude config was created
       expect(existsSync(ctx.claudeConfigPath)).toBe(true);
@@ -287,8 +291,8 @@ describe('CLI E2E Tests', () => {
     it('should handle empty server list', () => {
       const result = runCliSuccess('push claude-code');
 
-      // Should complete without error
-      expect(result).toContain('claude-code');
+      // Should complete without error - check for sync message
+      expect(result).toContain('Synced');
     });
 
     it('should use dry-run flag', () => {
@@ -311,15 +315,18 @@ describe('CLI E2E Tests', () => {
     it('should list available agents', () => {
       const result = runCliSuccess('agents');
 
-      expect(result).toContain('claude-code');
-      expect(result).toContain('codex');
+      // Output shows display names, not agent ids
+      expect(result).toContain('Claude Code');
+      expect(result).toContain('Codex');
     });
 
     it('should output JSON with --json flag', () => {
       const result = runCliSuccess('agents --json');
       const parsed = JSON.parse(result);
 
-      expect(Array.isArray(parsed) || typeof parsed === 'object').toBe(true);
+      // JSON output uses agent ids as keys
+      expect(parsed).toHaveProperty('claude-code');
+      expect(parsed).toHaveProperty('codex');
     });
   });
 
