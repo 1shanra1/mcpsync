@@ -14,8 +14,9 @@ mcp-sync add github --command npx --args "-y @modelcontextprotocol/server-github
 mcp-sync push
 
 # ✓ claude-code  (3 servers)
-# ✓ gemini-cli   (3 servers)
 # ✓ codex        (3 servers)
+# ✓ gemini-cli   (3 servers)
+# ✓ roo-code     (3 servers)
 ```
 
 ## Installation
@@ -53,9 +54,9 @@ mcp-sync doctor
 |-------|--------|---------------|-------|
 | Claude Code | ✅ | JSON | Full support |
 | OpenAI Codex | ✅ | TOML | Full support including tool filtering |
-| Gemini CLI | 🚧 | JSON | Coming soon |
+| Gemini CLI | ✅ | JSON | Full support including cwd, tool filtering, trust |
+| Roo Code | ✅ | JSON | Full support with alwaysAllow, env var transform |
 | Amp Code | 🚧 | JSON | Coming soon |
-| Roo Code | 🚧 | JSON | Coming soon |
 | OpenCode | 🚧 | JSON | Coming soon |
 | Kimi Code | 🚧 | JSON | Coming soon |
 
@@ -271,7 +272,7 @@ npm run build
 
 Contributions welcome! Areas we need help with:
 
-- **New adapters**: Gemini CLI, Amp, Roo Code, OpenCode, Kimi Code
+- **New adapters**: Amp, OpenCode, Kimi Code
 - **Testing**: Test coverage for adapters
 - **Documentation**: Guides for specific workflows
 
