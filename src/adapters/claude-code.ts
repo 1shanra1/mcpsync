@@ -1,7 +1,8 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { execFileSync } from 'child_process';
+import { atomicWrite } from '../core/fs-utils.js';
 import {
   BaseAdapter,
   ConfigPaths,
@@ -125,7 +126,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
     config: CanonicalConfig,
     options: WriteOptions = {}
   ): Promise<SyncResult> {
-    const { scope = 'global', merge = false } = options;
+    const { scope = 'global', merge = false, force = false } = options;
     const paths = this.getConfigPaths();
     const warnings: string[] = [];
 
@@ -152,10 +153,18 @@ export class ClaudeCodeAdapter extends BaseAdapter {
     const configPath = scope === 'project' ? paths.project! : paths.global!;
 
     if (existsSync(configPath)) {
+      const content = readFileSync(configPath, 'utf-8');
       try {
-        existingConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
-      } catch {
-        // Start fresh if parse fails
+        existingConfig = JSON.parse(content);
+      } catch (error) {
+        if (!force) {
+          throw new Error(
+            `Failed to parse ${configPath}: ${error instanceof Error ? error.message : error}\n` +
+            `Fix the file manually or use --force to overwrite.`
+          );
+        }
+        // force=true: proceed with empty config (backup created by atomicWrite)
+        existingConfig = {};
       }
     }
 
@@ -165,7 +174,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       const projectConfig = {
         mcpServers: claudeServers,
       };
-      writeFileSync(configPath, JSON.stringify(projectConfig, null, 2) + '\n');
+      atomicWrite(configPath, JSON.stringify(projectConfig, null, 2) + '\n', { backup: true });
     } else {
       // Write to ~/.claude.json
       // Replace mcpServers entirely (authoritative sync) unless merge mode is enabled
@@ -177,7 +186,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       } else {
         existingConfig.mcpServers = claudeServers;
       }
-      writeFileSync(configPath, JSON.stringify(existingConfig, null, 2) + '\n');
+      atomicWrite(configPath, JSON.stringify(existingConfig, null, 2) + '\n', { backup: true });
     }
 
     return {

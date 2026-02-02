@@ -1,7 +1,8 @@
 import { homedir } from 'os';
 import { join, dirname } from 'path';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync } from 'fs';
 import * as yaml from 'js-yaml';
+import { atomicWrite } from './fs-utils.js';
 import {
   CanonicalConfig,
   Server,
@@ -106,7 +107,7 @@ export class ConfigManager {
       sortKeys: false,
     });
 
-    writeFileSync(this.configPath, content);
+    atomicWrite(this.configPath, content, { backup: true });
     this.config = config;
   }
 
@@ -196,10 +197,44 @@ export class ConfigManager {
       throw new Error(`Server '${name}' not found.`);
     }
 
-    // Merge updates
-    config.servers[name] = { ...existing, ...updates } as Server;
+    // Deep merge updates
+    config.servers[name] = deepMerge(existing, updates) as Server;
     this.save(config);
   }
+}
+
+// =============================================================================
+// Deep Merge Utility
+// =============================================================================
+
+/**
+ * Deep merge two objects. Arrays are replaced, not merged.
+ */
+function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
+  const result = { ...target };
+
+  for (const key of Object.keys(source) as (keyof T)[]) {
+    const sourceVal = source[key];
+    const targetVal = target[key];
+
+    if (
+      sourceVal !== null &&
+      typeof sourceVal === 'object' &&
+      !Array.isArray(sourceVal) &&
+      targetVal !== null &&
+      typeof targetVal === 'object' &&
+      !Array.isArray(targetVal)
+    ) {
+      result[key] = deepMerge(
+        targetVal as Record<string, unknown>,
+        sourceVal as Record<string, unknown>
+      ) as T[keyof T];
+    } else if (sourceVal !== undefined) {
+      result[key] = sourceVal as T[keyof T];
+    }
+  }
+
+  return result;
 }
 
 // =============================================================================

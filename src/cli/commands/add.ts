@@ -10,6 +10,7 @@ interface AddOptions {
   args?: string[];
   url?: string;
   env?: string[];
+  header?: string[];
   description?: string;
 }
 
@@ -219,21 +220,30 @@ async function interactiveAddHttp(options: AddOptions): Promise<HttpServer> {
 }
 
 function buildServerFromOptions(name: string, options: AddOptions): StdioServer | HttpServer {
+  if (options.type === 'http' || options.url) {
+    if (!options.url) {
+      throw new Error('URL is required for HTTP servers');
+    }
+    // Parse headers from --header flag
+    const headers: Record<string, string> = {};
+    if (options.header) {
+      for (const h of options.header) {
+        const [key, ...valueParts] = h.split('=');
+        headers[key] = valueParts.join('=');
+      }
+    }
+    return createHttpServer(options.url, headers, {
+      description: options.description,
+    });
+  }
+
+  // stdio server - use --env for environment
   const env: Record<string, string> = {};
   if (options.env) {
     for (const e of options.env) {
       const [key, ...valueParts] = e.split('=');
       env[key] = valueParts.join('=');
     }
-  }
-
-  if (options.type === 'http' || options.url) {
-    if (!options.url) {
-      throw new Error('URL is required for HTTP servers');
-    }
-    return createHttpServer(options.url, env, {
-      description: options.description,
-    });
   }
 
   if (!options.command) {

@@ -1,8 +1,9 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { execFileSync } from 'child_process';
 import * as TOML from 'smol-toml';
+import { atomicWrite } from '../core/fs-utils.js';
 import {
   BaseAdapter,
   ConfigPaths,
@@ -131,7 +132,7 @@ export class CodexAdapter extends BaseAdapter {
     config: CanonicalConfig,
     options: WriteOptions = {}
   ): Promise<SyncResult> {
-    const { merge = false } = options;
+    const { merge = false, force = false } = options;
     const paths = this.getConfigPaths();
     const warnings: string[] = [];
 
@@ -164,10 +165,18 @@ export class CodexAdapter extends BaseAdapter {
     const configPath = paths.global!;
 
     if (existsSync(configPath)) {
+      const content = readFileSync(configPath, 'utf-8');
       try {
-        existingConfig = TOML.parse(readFileSync(configPath, 'utf-8')) as CodexConfig;
-      } catch {
-        // Start fresh if parse fails
+        existingConfig = TOML.parse(content) as CodexConfig;
+      } catch (error) {
+        if (!force) {
+          throw new Error(
+            `Failed to parse ${configPath}: ${error instanceof Error ? error.message : error}\n` +
+            `Fix the file manually or use --force to overwrite.`
+          );
+        }
+        // force=true: proceed with empty config (backup created by atomicWrite)
+        existingConfig = {};
       }
     }
 
@@ -183,7 +192,7 @@ export class CodexAdapter extends BaseAdapter {
 
     // Write TOML
     const tomlContent = TOML.stringify(existingConfig);
-    writeFileSync(configPath, tomlContent);
+    atomicWrite(configPath, tomlContent, { backup: true });
 
     return {
       success: true,

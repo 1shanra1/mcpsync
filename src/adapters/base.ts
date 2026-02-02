@@ -53,6 +53,7 @@ export interface AgentMcpConfig {
 export interface WriteOptions {
   scope?: 'global' | 'project' | 'local';
   merge?: boolean;
+  force?: boolean;
 }
 
 // =============================================================================

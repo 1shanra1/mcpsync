@@ -1,12 +1,13 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { ConfigManager } from '../../core/config.js';
-import { adapterRegistry } from '../../adapters/index.js';
+import { adapterRegistry, StubAdapter } from '../../adapters/index.js';
 import { SupportedAgent } from '../../core/schema.js';
 
 interface PushOptions {
   scope?: 'global' | 'project' | 'local';
   merge?: boolean;
+  force?: boolean;
 }
 
 export async function pushCommand(
@@ -43,6 +44,12 @@ export async function pushCommand(
       if (!adapter) {
         console.log(chalk.red(`Unknown agent: ${agent}`));
         console.log(chalk.gray(`Available: ${adapterRegistry.getNames().join(', ')}`));
+        process.exit(1);
+      }
+
+      // Check for stub adapter
+      if (adapter instanceof StubAdapter) {
+        console.log(chalk.yellow(`${adapter.displayName} adapter is not yet implemented`));
         process.exit(1);
       }
 
@@ -106,7 +113,7 @@ export async function pushCommand(
       // Write config
       try {
         const scope = options.scope ?? (agentConfig?.scope as 'global' | 'project' | 'local') ?? 'global';
-        const result = await adapter.write(config, { scope, merge: options.merge });
+        const result = await adapter.write(config, { scope, merge: options.merge, force: options.force });
 
         if (result.success) {
           spinner.succeed(`${adapter.displayName} ${chalk.gray(`(${result.serversWritten} servers)`)}`);

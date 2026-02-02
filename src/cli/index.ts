@@ -42,7 +42,8 @@ program
   .option('--command <cmd>', 'Command to run (for stdio)')
   .option('--args <args...>', 'Command arguments (for stdio)')
   .option('--url <url>', 'Server URL (for http)')
-  .option('-e, --env <env...>', 'Environment variables (KEY=VALUE)')
+  .option('-e, --env <env...>', 'Environment variables (KEY=VALUE, for stdio type)')
+  .option('-H, --header <headers...>', 'HTTP headers (KEY=VALUE, for http type)')
   .option('-d, --description <desc>', 'Server description')
   .action(addCommand);
 
@@ -117,6 +118,7 @@ program
   .description('Sync config to agents')
   .option('--scope <scope>', 'Config scope (global, project, local)', 'global')
   .option('--merge', 'Merge with existing servers instead of replacing')
+  .option('--force', 'Overwrite malformed agent configs (creates backup)')
   .action(pushCommand);
 
 program

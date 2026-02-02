@@ -1,6 +1,7 @@
 import { BaseAdapter } from './base.js';
 import { ClaudeCodeAdapter } from './claude-code.js';
 import { CodexAdapter } from './codex.js';
+import { StubAdapter } from './stub.js';
 import { SupportedAgent } from '../core/schema.js';
 
 // =============================================================================
@@ -14,15 +15,16 @@ class AdapterRegistry {
   private adapters: Map<SupportedAgent, BaseAdapter> = new Map();
 
   constructor() {
-    // Register all adapters
+    // Register implemented adapters
     this.register(new ClaudeCodeAdapter());
     this.register(new CodexAdapter());
-    // TODO: Register other adapters as they're implemented
-    // this.register(new GeminiCliAdapter());
-    // this.register(new AmpAdapter());
-    // this.register(new RooCodeAdapter());
-    // this.register(new OpenCodeAdapter());
-    // this.register(new KimiCodeAdapter());
+
+    // Register stub adapters for planned agents
+    this.register(new StubAdapter('gemini-cli', 'Gemini CLI'));
+    this.register(new StubAdapter('amp', 'Amp'));
+    this.register(new StubAdapter('roo-code', 'Roo Code'));
+    this.register(new StubAdapter('opencode', 'OpenCode'));
+    this.register(new StubAdapter('kimi-code', 'Kimi Code'));
   }
 
   /**
@@ -100,6 +102,7 @@ export const adapterRegistry = new AdapterRegistry();
 
 // Re-export types
 export { BaseAdapter } from './base.js';
+export { StubAdapter } from './stub.js';
 export type {
   ConfigPaths,
   DetectionResult,
