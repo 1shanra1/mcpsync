@@ -74,7 +74,7 @@ describe('Adapter E2E Tests', () => {
 
     it('should include env vars in correct format', () => {
       runCliSuccess(
-        'add api-server --command node --args server.js --env API_KEY=${API_KEY} --env DEBUG=true'
+        'add api-server --command node --args server.js --env API_KEY=\\${API_KEY} --env DEBUG=true'
       );
       runCliSuccess('push claude-code');
 
@@ -189,7 +189,7 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should include env vars for Codex', () => {
-      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=\\${API_KEY}');
       runCliSuccess('push codex');
 
       const content = readFileSync(ctx.codexConfigPath, 'utf-8');
@@ -251,7 +251,7 @@ describe('Adapter E2E Tests', () => {
 
     it('should include env vars in correct format', () => {
       runCliSuccess(
-        'add api-server --command node --args server.js --env API_KEY=${API_KEY} --env DEBUG=true'
+        'add api-server --command node --args server.js --env API_KEY=\\${API_KEY} --env DEBUG=true'
       );
       runCliSuccess('push gemini-cli');
 
@@ -314,7 +314,7 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should transform env vars to Roo format', () => {
-      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=\\${API_KEY}');
       runCliSuccess('push roo-code --scope project');
 
       const config = readRooConfig(ctx);
@@ -340,7 +340,7 @@ describe('Adapter E2E Tests', () => {
 
     it('should handle mixed env var formats correctly', () => {
       // Test that strings with both ${env:VAR} and $VAR patterns are fully transformed
-      runCliSuccess('add mixed-env --command node --args server.js --env MIXED=prefix_$SUFFIX');
+      runCliSuccess('add mixed-env --command node --args server.js --env MIXED=prefix_\\$SUFFIX');
       runCliSuccess('push roo-code --scope project');
 
       const config = readRooConfig(ctx);
@@ -395,7 +395,7 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should include env vars in canonical ${VAR} format', () => {
-      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=\\${API_KEY}');
       runCliSuccess('push amp');
 
       const config = readAmpConfig(ctx);
@@ -502,7 +502,7 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should transform env vars to OpenCode format (${VAR} -> {env:VAR})', () => {
-      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('add api-server --command node --args server.js --env API_KEY=\\${API_KEY}');
       runCliSuccess('push opencode --scope project');
 
       const config = readOpenCodeConfig(ctx);
@@ -515,7 +515,7 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should use environment key (not env)', () => {
-      runCliSuccess('add api-server --command node --env API_KEY=${API_KEY}');
+      runCliSuccess('add api-server --command node --env API_KEY=\\${API_KEY}');
       runCliSuccess('push opencode --scope project');
 
       const config = readOpenCodeConfig(ctx);
@@ -541,7 +541,7 @@ describe('Adapter E2E Tests', () => {
 
     it('should transform headers env vars to OpenCode format', () => {
       runCliSuccess(
-        'add remote --type http --url https://example.com --headers Authorization=Bearer\\ ${TOKEN}'
+        'add remote --type http --url https://example.com --header Authorization=Bearer\\ \\${TOKEN}'
       );
       runCliSuccess('push opencode --scope project');
 
@@ -613,7 +613,7 @@ describe('Adapter E2E Tests', () => {
   describe('Cross-Agent Sync', () => {
     it('should push same config to multiple agents', () => {
       runCliSuccess(
-        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=\\${GITHUB_TOKEN}'
       );
       runCliSuccess(
         'add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem /docs'
@@ -645,7 +645,7 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should produce equivalent server configs across agents', () => {
-      runCliSuccess('add test-mcp --command node --args /path/to/server.js --env SECRET=${SECRET}');
+      runCliSuccess('add test-mcp --command node --args /path/to/server.js --env SECRET=\\${SECRET}');
       runCliSuccess('push');
 
       // Get Claude server config

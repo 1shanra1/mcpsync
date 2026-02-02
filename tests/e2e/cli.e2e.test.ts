@@ -106,7 +106,7 @@ describe('CLI E2E Tests', () => {
 
     it('should add a server with environment variables', () => {
       runCliSuccess(
-        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=\\${GITHUB_TOKEN}'
       );
 
       const config = readCanonicalConfig(ctx);
@@ -219,7 +219,7 @@ describe('CLI E2E Tests', () => {
     beforeEach(() => {
       runCliSuccess('init');
       runCliSuccess(
-        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=\\${GITHUB_TOKEN}'
       );
     });
 
@@ -266,7 +266,7 @@ describe('CLI E2E Tests', () => {
     });
 
     it('should transform server config correctly for Claude', () => {
-      runCliSuccess('add test-mcp --command node --args server.js --env API_KEY=${API_KEY}');
+      runCliSuccess('add test-mcp --command node --args server.js --env API_KEY=\\${API_KEY}');
       runCliSuccess('push claude-code');
 
       const server = getClaudeServer(ctx, 'test-mcp');
@@ -366,7 +366,7 @@ describe('CLI E2E Tests', () => {
 
       // Add multiple servers
       runCliSuccess(
-        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=\\${GITHUB_TOKEN}'
       );
       runCliSuccess(
         'add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem /home/user/docs'

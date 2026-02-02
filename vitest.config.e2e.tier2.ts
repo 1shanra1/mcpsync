@@ -7,9 +7,13 @@ export default defineConfig({
 
     environment: 'node',
     testTimeout: 120000,
+
+    // CRITICAL: Run test files sequentially - they share HOME/filesystem state
+    fileParallelism: false,
     sequence: {
       concurrent: false,
     },
+
     reporters: ['verbose'],
     outputFile: {
       json: './test-results/e2e-tier2-results.json',
