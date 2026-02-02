@@ -1,6 +1,6 @@
 # mcp-sync
 
-[![CI](https://github.com/yourusername/mcp-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/mcp-sync/actions/workflows/ci.yml)
+[![CI](https://github.com/1shanra1/mcpsync/actions/workflows/ci.yml/badge.svg)](https://github.com/1shanra1/mcpsync/actions/workflows/ci.yml)
 
 **Unified MCP server configuration for all your coding agents.**
 
