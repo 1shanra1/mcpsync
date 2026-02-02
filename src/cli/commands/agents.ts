@@ -6,10 +6,7 @@ interface AgentsOptions {
   json?: boolean;
 }
 
-export async function agentsCommand(
-  options: AgentsOptions,
-  _cmd: unknown
-): Promise<void> {
+export async function agentsCommand(options: AgentsOptions, _cmd: unknown): Promise<void> {
   try {
     const detections = await adapterRegistry.detectAll();
     const adapters = adapterRegistry.getAll();
@@ -45,9 +42,7 @@ export async function agentsCommand(
 
       if (installed) installedCount++;
 
-      const status = installed
-        ? chalk.green('✓ Installed')
-        : chalk.gray('Not found');
+      const status = installed ? chalk.green('✓ Installed') : chalk.gray('Not found');
 
       const version = detection?.version ?? '-';
 
@@ -60,34 +55,31 @@ export async function agentsCommand(
         configStatus = chalk.yellow('Missing');
       }
 
-      data.push([
-        adapter.displayName,
-        status,
-        version,
-        configStatus,
-      ]);
+      data.push([adapter.displayName, status, version, configStatus]);
     }
 
-    console.log(table(data, {
-      border: {
-        topBody: '',
-        topJoin: '',
-        topLeft: '',
-        topRight: '',
-        bottomBody: '',
-        bottomJoin: '',
-        bottomLeft: '',
-        bottomRight: '',
-        bodyLeft: '',
-        bodyRight: '',
-        bodyJoin: chalk.gray('│'),
-        joinBody: chalk.gray('─'),
-        joinLeft: '',
-        joinRight: '',
-        joinJoin: chalk.gray('┼'),
-      },
-      drawHorizontalLine: (index, size) => index === 1,
-    }));
+    console.log(
+      table(data, {
+        border: {
+          topBody: '',
+          topJoin: '',
+          topLeft: '',
+          topRight: '',
+          bottomBody: '',
+          bottomJoin: '',
+          bottomLeft: '',
+          bottomRight: '',
+          bodyLeft: '',
+          bodyRight: '',
+          bodyJoin: chalk.gray('│'),
+          joinBody: chalk.gray('─'),
+          joinLeft: '',
+          joinRight: '',
+          joinJoin: chalk.gray('┼'),
+        },
+        drawHorizontalLine: (index, _size) => index === 1,
+      })
+    );
 
     console.log(chalk.gray(`${installedCount}/${adapters.length} agents installed\n`));
 
@@ -108,11 +100,12 @@ export async function agentsCommand(
       if (caps.supportsTimeout) capList.push('Timeout');
       if (caps.supportsProjectScope) capList.push('Project Scope');
 
-      console.log(`  ${chalk.cyan(adapter.displayName)}: ${chalk.gray(capList.join(', ') || 'Basic')}`);
+      console.log(
+        `  ${chalk.cyan(adapter.displayName)}: ${chalk.gray(capList.join(', ') || 'Basic')}`
+      );
     }
 
     console.log();
-
   } catch (error) {
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : error}`));
     process.exit(1);

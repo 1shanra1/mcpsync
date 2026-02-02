@@ -1,10 +1,4 @@
-import {
-  CanonicalConfig,
-  Server,
-  SupportedAgent,
-  AgentCapabilities,
-  Env,
-} from '../core/schema.js';
+import { CanonicalConfig, Server, SupportedAgent, AgentCapabilities, Env } from '../core/schema.js';
 
 // =============================================================================
 // Types
@@ -144,7 +138,7 @@ export abstract class BaseAdapter {
     }
 
     return {
-      valid: !issues.some(i => i.type === 'error'),
+      valid: !issues.some((i) => i.type === 'error'),
       issues,
     };
   }
@@ -159,7 +153,7 @@ export abstract class BaseAdapter {
   ): boolean {
     // Check exclusions
     const excluded = config.exclusions?.some(
-      e => e.server === serverName && e.agent === this.name
+      (e) => e.server === serverName && e.agent === this.name
     );
     if (excluded) return false;
 
@@ -188,7 +182,10 @@ export abstract class BaseAdapter {
   /**
    * Transform env object, resolving references if needed
    */
-  protected transformEnv(env: Env | undefined, keepReference: boolean = true): Record<string, string> {
+  protected transformEnv(
+    env: Env | undefined,
+    keepReference: boolean = true
+  ): Record<string, string> {
     if (!env) return {};
     const result: Record<string, string> = {};
     for (const [key, value] of Object.entries(env)) {

@@ -3,13 +3,7 @@ import { join, dirname } from 'path';
 import { existsSync, readFileSync, mkdirSync } from 'fs';
 import * as yaml from 'js-yaml';
 import { atomicWrite } from './fs-utils.js';
-import {
-  CanonicalConfig,
-  Server,
-  StdioServer,
-  HttpServer,
-  validateConfigSafe,
-} from './schema.js';
+import { CanonicalConfig, Server, StdioServer, HttpServer, validateConfigSafe } from './schema.js';
 
 // =============================================================================
 // Config Manager
@@ -56,7 +50,9 @@ export class ConfigManager {
    */
   load(): CanonicalConfig {
     if (!this.exists()) {
-      throw new Error(`Config file not found: ${this.configPath}\nRun 'mcp-sync init' to create one.`);
+      throw new Error(
+        `Config file not found: ${this.configPath}\nRun 'mcp-sync init' to create one.`
+      );
     }
 
     const content = readFileSync(this.configPath, 'utf-8');
@@ -64,7 +60,9 @@ export class ConfigManager {
 
     const result = validateConfigSafe(parsed);
     if (!result.success) {
-      const errors = result.error.errors.map(e => `  - ${e.path.join('.')}: ${e.message}`).join('\n');
+      const errors = result.error.errors
+        .map((e) => `  - ${e.path.join('.')}: ${e.message}`)
+        .join('\n');
       throw new Error(`Invalid config file:\n${errors}`);
     }
 
@@ -89,7 +87,9 @@ export class ConfigManager {
     // Validate before saving
     const result = validateConfigSafe(config);
     if (!result.success) {
-      const errors = result.error.errors.map(e => `  - ${e.path.join('.')}: ${e.message}`).join('\n');
+      const errors = result.error.errors
+        .map((e) => `  - ${e.path.join('.')}: ${e.message}`)
+        .join('\n');
       throw new Error(`Invalid config:\n${errors}`);
     }
 
@@ -161,7 +161,7 @@ export class ConfigManager {
     delete config.servers[name];
 
     // Also remove any exclusions for this server
-    config.exclusions = config.exclusions?.filter(e => e.server !== name) ?? [];
+    config.exclusions = config.exclusions?.filter((e) => e.server !== name) ?? [];
 
     this.save(config);
     return true;

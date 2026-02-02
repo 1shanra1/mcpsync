@@ -67,7 +67,9 @@ export async function pushCommand(
       return;
     }
 
-    console.log(chalk.bold(`\nSyncing ${serverCount} server(s) to ${adaptersToSync.length} agent(s)...\n`));
+    console.log(
+      chalk.bold(`\nSyncing ${serverCount} server(s) to ${adaptersToSync.length} agent(s)...\n`)
+    );
 
     if (globalOpts.dryRun) {
       console.log(chalk.yellow('(dry run - no changes will be made)\n'));
@@ -90,7 +92,7 @@ export async function pushCommand(
       const validation = adapter.validate(config);
 
       if (!validation.valid) {
-        const errors = validation.issues.filter(i => i.type === 'error');
+        const errors = validation.issues.filter((i) => i.type === 'error');
         spinner.fail(chalk.red(`${adapter.displayName} - ${errors.length} error(s)`));
         for (const issue of errors) {
           console.log(chalk.red(`    ${issue.message}`));
@@ -100,23 +102,34 @@ export async function pushCommand(
       }
 
       if (globalOpts.dryRun) {
-        const serverNames = Object.keys(config.servers).filter(name => {
+        const serverNames = Object.keys(config.servers).filter((name) => {
           const server = config.servers[name];
-          return !config.exclusions?.some(e => e.server === name && e.agent === adapter.name) &&
-                 server.agents?.[adapter.name]?.enabled !== false;
+          return (
+            !config.exclusions?.some((e) => e.server === name && e.agent === adapter.name) &&
+            server.agents?.[adapter.name]?.enabled !== false
+          );
         });
-        spinner.succeed(chalk.gray(`${adapter.displayName} - would write ${serverNames.length} server(s)`));
+        spinner.succeed(
+          chalk.gray(`${adapter.displayName} - would write ${serverNames.length} server(s)`)
+        );
         successCount++;
         continue;
       }
 
       // Write config
       try {
-        const scope = options.scope ?? (agentConfig?.scope as 'global' | 'project' | 'local') ?? 'global';
-        const result = await adapter.write(config, { scope, merge: options.merge, force: options.force });
+        const scope =
+          options.scope ?? (agentConfig?.scope as 'global' | 'project' | 'local') ?? 'global';
+        const result = await adapter.write(config, {
+          scope,
+          merge: options.merge,
+          force: options.force,
+        });
 
         if (result.success) {
-          spinner.succeed(`${adapter.displayName} ${chalk.gray(`(${result.serversWritten} servers)`)}`);
+          spinner.succeed(
+            `${adapter.displayName} ${chalk.gray(`(${result.serversWritten} servers)`)}`
+          );
 
           // Show warnings
           for (const warning of result.warnings) {
@@ -128,7 +141,9 @@ export async function pushCommand(
           errorCount++;
         }
       } catch (error) {
-        spinner.fail(chalk.red(`${adapter.displayName} - ${error instanceof Error ? error.message : error}`));
+        spinner.fail(
+          chalk.red(`${adapter.displayName} - ${error instanceof Error ? error.message : error}`)
+        );
         errorCount++;
       }
     }
@@ -140,7 +155,6 @@ export async function pushCommand(
     } else {
       console.log(chalk.yellow(`Synced to ${successCount} agent(s), ${errorCount} failed`));
     }
-
   } catch (error) {
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : error}`));
     process.exit(1);

@@ -58,8 +58,9 @@ export async function addCommand(
     console.log(chalk.gray('\nServer configuration:'));
     console.log(chalk.gray(JSON.stringify(redactSecrets(server), null, 2)));
 
-    console.log(chalk.cyan('\nRun ') + chalk.bold('mcp-sync push') + chalk.cyan(' to sync to all agents'));
-
+    console.log(
+      chalk.cyan('\nRun ') + chalk.bold('mcp-sync push') + chalk.cyan(' to sync to all agents')
+    );
   } catch (error) {
     if ((error as Error).name === 'ExitPromptError') {
       // User cancelled
@@ -70,17 +71,22 @@ export async function addCommand(
   }
 }
 
-async function interactiveAdd(name: string, options: AddOptions): Promise<StdioServer | HttpServer> {
+async function interactiveAdd(
+  name: string,
+  options: AddOptions
+): Promise<StdioServer | HttpServer> {
   console.log(chalk.bold(`\nAdding server: ${name}\n`));
 
   // Server type
-  const serverType = options.type ?? await select({
-    message: 'Server type',
-    choices: [
-      { name: 'stdio - Local command', value: 'stdio' as const },
-      { name: 'http - Remote URL', value: 'http' as const },
-    ],
-  });
+  const serverType =
+    options.type ??
+    (await select({
+      message: 'Server type',
+      choices: [
+        { name: 'stdio - Local command', value: 'stdio' as const },
+        { name: 'http - Remote URL', value: 'http' as const },
+      ],
+    }));
 
   if (serverType === 'stdio') {
     return await interactiveAddStdio(options);
@@ -91,11 +97,13 @@ async function interactiveAdd(name: string, options: AddOptions): Promise<StdioS
 
 async function interactiveAddStdio(options: AddOptions): Promise<StdioServer> {
   // Command
-  const command = options.command ?? await input({
-    message: 'Command',
-    default: 'npx',
-    validate: (v) => v.length > 0 || 'Command is required',
-  });
+  const command =
+    options.command ??
+    (await input({
+      message: 'Command',
+      default: 'npx',
+      validate: (v) => v.length > 0 || 'Command is required',
+    }));
 
   // Args
   let args: string[] = options.args ?? [];
@@ -147,10 +155,12 @@ async function interactiveAddStdio(options: AddOptions): Promise<StdioServer> {
   }
 
   // Description
-  const description = options.description ?? await input({
-    message: 'Description (optional)',
-    default: '',
-  });
+  const description =
+    options.description ??
+    (await input({
+      message: 'Description (optional)',
+      default: '',
+    }));
 
   return createStdioServer(command, args, env, {
     description: description || undefined,
@@ -159,17 +169,19 @@ async function interactiveAddStdio(options: AddOptions): Promise<StdioServer> {
 
 async function interactiveAddHttp(options: AddOptions): Promise<HttpServer> {
   // URL
-  const url = options.url ?? await input({
-    message: 'Server URL',
-    validate: (v) => {
-      try {
-        new URL(v);
-        return true;
-      } catch {
-        return 'Invalid URL';
-      }
-    },
-  });
+  const url =
+    options.url ??
+    (await input({
+      message: 'Server URL',
+      validate: (v) => {
+        try {
+          new URL(v);
+          return true;
+        } catch {
+          return 'Invalid URL';
+        }
+      },
+    }));
 
   // Headers
   const headers: Record<string, string> = {};
@@ -211,10 +223,12 @@ async function interactiveAddHttp(options: AddOptions): Promise<HttpServer> {
   });
 
   // Description
-  const description = options.description ?? await input({
-    message: 'Description (optional)',
-    default: '',
-  });
+  const description =
+    options.description ??
+    (await input({
+      message: 'Description (optional)',
+      default: '',
+    }));
 
   return createHttpServer(url, headers, {
     auth,
@@ -253,10 +267,7 @@ function buildServerFromOptions(name: string, options: AddOptions): StdioServer 
     throw new Error('Command is required for stdio servers');
   }
 
-  return createStdioServer(
-    options.command,
-    options.args ?? [],
-    env,
-    { description: options.description }
-  );
+  return createStdioServer(options.command, options.args ?? [], env, {
+    description: options.description,
+  });
 }

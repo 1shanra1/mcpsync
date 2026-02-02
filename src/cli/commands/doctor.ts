@@ -55,7 +55,6 @@ export async function doctorCommand(
         console.log(chalk.yellow('  ⚠ No servers configured'));
         hasWarnings = true;
       }
-
     } catch (error) {
       console.log(chalk.red(`  ✗ ${error instanceof Error ? error.message : error}`));
       hasErrors = true;
@@ -91,7 +90,10 @@ export async function doctorCommand(
       continue;
     }
 
-    console.log(chalk.green(`    ✓ Installed`) + chalk.gray(detection.version ? ` (v${detection.version})` : ''));
+    console.log(
+      chalk.green(`    ✓ Installed`) +
+        chalk.gray(detection.version ? ` (v${detection.version})` : '')
+    );
 
     if (detection.configPath) {
       console.log(`    ${chalk.gray('Config:')} ${detection.configPath}`);
@@ -110,9 +112,11 @@ export async function doctorCommand(
         const agentConfig = await adapter.read();
 
         if (agentConfig) {
-          const canonicalServers = Object.keys(config.servers).filter(name => {
+          const canonicalServers = Object.keys(config.servers).filter((name) => {
             const server = config.servers[name];
-            const excluded = config.exclusions?.some(e => e.server === name && e.agent === adapter.name);
+            const excluded = config.exclusions?.some(
+              (e) => e.server === name && e.agent === adapter.name
+            );
             const disabled = server.agents?.[adapter.name]?.enabled === false;
             return !excluded && !disabled;
           });
@@ -120,9 +124,9 @@ export async function doctorCommand(
           const agentServers = Object.keys(agentConfig.servers);
 
           // Find missing in agent
-          const missingInAgent = canonicalServers.filter(s => !agentServers.includes(s));
+          const missingInAgent = canonicalServers.filter((s) => !agentServers.includes(s));
           // Find extra in agent (not in canonical)
-          const extraInAgent = agentServers.filter(s => !canonicalServers.includes(s));
+          const extraInAgent = agentServers.filter((s) => !canonicalServers.includes(s));
 
           if (missingInAgent.length === 0 && extraInAgent.length === 0) {
             console.log(chalk.green('    ✓ In sync'));
@@ -137,7 +141,11 @@ export async function doctorCommand(
           }
         }
       } catch (error) {
-        console.log(chalk.yellow(`    ⚠ Could not read config: ${error instanceof Error ? error.message : error}`));
+        console.log(
+          chalk.yellow(
+            `    ⚠ Could not read config: ${error instanceof Error ? error.message : error}`
+          )
+        );
         hasWarnings = true;
       }
     }

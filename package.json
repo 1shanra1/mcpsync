@@ -23,7 +23,9 @@
     "test:e2e": "vitest run --config vitest.config.e2e.ts",
     "test:e2e:docker": "docker compose -f docker-compose.test.yml up --build --abort-on-container-exit",
     "test:all": "npm run test:unit && npm run test:e2e",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src tests",
+    "format": "prettier --write src tests",
+    "format:check": "prettier --check src tests",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -68,7 +70,9 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.4.0",
+    "typescript-eslint": "^8.54.0",
     "vitest": "^2.0.0"
   }
 }

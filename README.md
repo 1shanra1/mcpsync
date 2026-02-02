@@ -1,5 +1,7 @@
 # mcp-sync
 
+[![CI](https://github.com/yourusername/mcp-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/mcp-sync/actions/workflows/ci.yml)
+
 **Unified MCP server configuration for all your coding agents.**
 
 Stop copying MCP server configs between Claude Code, Gemini CLI, OpenAI Codex, and other AI coding tools. Define your servers once, sync everywhere.
@@ -238,6 +240,31 @@ const installed = await adapterRegistry.getInstalled();
 for (const adapter of installed) {
   console.log(`Found: ${adapter.displayName}`);
 }
+```
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run unit tests
+npm run test:unit
+
+# Run E2E tests in Docker
+npm run test:e2e:docker
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+
+# Check formatting
+npm run format:check
+
+# Build
+npm run build
 ```
 
 ## Contributing

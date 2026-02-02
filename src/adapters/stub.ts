@@ -1,4 +1,11 @@
-import { BaseAdapter, ConfigPaths, DetectionResult, AgentMcpConfig, SyncResult, WriteOptions } from './base.js';
+import {
+  BaseAdapter,
+  ConfigPaths,
+  DetectionResult,
+  AgentMcpConfig,
+  SyncResult,
+  WriteOptions,
+} from './base.js';
 import { CanonicalConfig, AgentCapabilities, SupportedAgent } from '../core/schema.js';
 
 /**

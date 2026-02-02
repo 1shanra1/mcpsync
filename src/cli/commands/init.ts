@@ -32,7 +32,10 @@ export async function initCommand(
     for (const [name, detection] of detections) {
       if (detection.installed) {
         installed.push(name);
-        console.log(chalk.green(`  ✓ ${name}`) + chalk.gray(detection.version ? ` (v${detection.version})` : ''));
+        console.log(
+          chalk.green(`  ✓ ${name}`) +
+            chalk.gray(detection.version ? ` (v${detection.version})` : '')
+        );
       }
     }
 
@@ -46,7 +49,6 @@ export async function initCommand(
     console.log(chalk.gray('  1. Add servers:    ') + 'mcp-sync add github');
     console.log(chalk.gray('  2. Push to agents: ') + 'mcp-sync push');
     console.log(chalk.gray('  3. Check status:   ') + 'mcp-sync doctor');
-
   } catch (error) {
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : error}`));
     process.exit(1);

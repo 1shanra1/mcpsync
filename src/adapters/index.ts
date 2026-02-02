@@ -65,7 +65,7 @@ class AdapterRegistry {
       try {
         const detection = await adapter.detect();
         results.set(name, detection);
-      } catch (error) {
+      } catch {
         results.set(name, {
           installed: false,
           configExists: false,

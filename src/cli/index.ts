@@ -131,10 +131,7 @@ program
   .option('--json', 'Output as JSON')
   .action(agentsCommand);
 
-program
-  .command('doctor')
-  .description('Check configuration health')
-  .action(doctorCommand);
+program.command('doctor').description('Check configuration health').action(doctorCommand);
 
 // =============================================================================
 // Error Handling

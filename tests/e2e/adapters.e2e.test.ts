@@ -9,12 +9,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { existsSync, readFileSync } from 'fs';
-import { execSync } from 'child_process';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import * as TOML from 'smol-toml';
 import {
   runCliSuccess,
-  getTestContext,
   setupTestEnvironment,
   cleanupTestConfigs,
   readClaudeConfig,
@@ -71,7 +69,9 @@ describe('Adapter E2E Tests', () => {
     });
 
     it('should include env vars in correct format', () => {
-      runCliSuccess('add api-server --command node --args server.js --env API_KEY=${API_KEY} --env DEBUG=true');
+      runCliSuccess(
+        'add api-server --command node --args server.js --env API_KEY=${API_KEY} --env DEBUG=true'
+      );
       runCliSuccess('push claude-code');
 
       const config = readClaudeConfig(ctx);
@@ -105,7 +105,7 @@ describe('Adapter E2E Tests', () => {
         },
       };
       const content = JSON.stringify(existingConfig, null, 2);
-      require('fs').writeFileSync(ctx.claudeConfigPath, content);
+      writeFileSync(ctx.claudeConfigPath, content);
 
       // Push new servers
       runCliSuccess('add newserver --command new');
@@ -130,10 +130,7 @@ describe('Adapter E2E Tests', () => {
           existing: { command: 'existing-cmd' },
         },
       };
-      require('fs').writeFileSync(
-        ctx.claudeConfigPath,
-        JSON.stringify(existingConfig, null, 2)
-      );
+      writeFileSync(ctx.claudeConfigPath, JSON.stringify(existingConfig, null, 2));
 
       // Push with merge
       runCliSuccess('add newserver --command new-cmd');
@@ -217,8 +214,12 @@ describe('Adapter E2E Tests', () => {
 
   describe('Cross-Agent Sync', () => {
     it('should push same config to multiple agents', () => {
-      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}');
-      runCliSuccess('add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem /docs');
+      runCliSuccess(
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+      );
+      runCliSuccess(
+        'add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem /docs'
+      );
 
       // Push to all agents
       runCliSuccess('push');

@@ -11,11 +11,9 @@ import {
   runCli,
   runCliSuccess,
   runCliFailure,
-  getTestContext,
   setupTestEnvironment,
   cleanupTestConfigs,
   readCanonicalConfig,
-  writeCanonicalConfig,
   readClaudeConfig,
   claudeHasServer,
   getClaudeServer,
@@ -86,7 +84,9 @@ describe('CLI E2E Tests', () => {
     });
 
     it('should add a stdio server', () => {
-      const result = runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github');
+      const result = runCliSuccess(
+        'add github --command npx --args -y @modelcontextprotocol/server-github'
+      );
 
       expect(result).toContain('Added');
 
@@ -102,7 +102,9 @@ describe('CLI E2E Tests', () => {
     });
 
     it('should add a server with environment variables', () => {
-      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}');
+      runCliSuccess(
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+      );
 
       const config = readCanonicalConfig(ctx);
       const servers = config?.servers as Record<string, unknown>;
@@ -131,7 +133,9 @@ describe('CLI E2E Tests', () => {
     });
 
     it('should add server with description', () => {
-      runCliSuccess('add docs --command npx --args -y @modelcontextprotocol/server-filesystem --description "Filesystem access for docs"');
+      runCliSuccess(
+        'add docs --command npx --args -y @modelcontextprotocol/server-filesystem --description "Filesystem access for docs"'
+      );
 
       const config = readCanonicalConfig(ctx);
       const servers = config?.servers as Record<string, unknown>;
@@ -211,7 +215,9 @@ describe('CLI E2E Tests', () => {
   describe('mcp-sync show', () => {
     beforeEach(() => {
       runCliSuccess('init');
-      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}');
+      runCliSuccess(
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+      );
     });
 
     it('should show server details', () => {
@@ -352,8 +358,12 @@ describe('CLI E2E Tests', () => {
       runCliSuccess('init');
 
       // Add multiple servers
-      runCliSuccess('add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}');
-      runCliSuccess('add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem /home/user/docs');
+      runCliSuccess(
+        'add github --command npx --args -y @modelcontextprotocol/server-github --env GITHUB_TOKEN=${GITHUB_TOKEN}'
+      );
+      runCliSuccess(
+        'add filesystem --command npx --args -y @modelcontextprotocol/server-filesystem /home/user/docs'
+      );
       runCliSuccess('add memory --command npx --args -y @modelcontextprotocol/server-memory');
 
       // Verify canonical config

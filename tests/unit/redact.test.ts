@@ -70,14 +70,8 @@ describe('redactSecrets', () => {
     });
 
     it('should handle arrays of objects', () => {
-      const input = [
-        { key: '${A}' },
-        { key: '${B}' },
-      ];
-      expect(redactSecrets(input)).toEqual([
-        { key: '[REDACTED]' },
-        { key: '[REDACTED]' },
-      ]);
+      const input = [{ key: '${A}' }, { key: '${B}' }];
+      expect(redactSecrets(input)).toEqual([{ key: '[REDACTED]' }, { key: '[REDACTED]' }]);
     });
 
     it('should handle empty arrays', () => {

@@ -6,13 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  validateConfig,
-  validateConfigSafe,
-  CanonicalConfigSchema,
-  StdioServerSchema,
-  HttpServerSchema,
-} from '../../src/core/schema.js';
+import { validateConfigSafe, StdioServerSchema, HttpServerSchema } from '../../src/core/schema.js';
 
 describe('Schema Validation', () => {
   // ===========================================================================
@@ -48,9 +42,7 @@ describe('Schema Validation', () => {
         agents: {
           'claude-code': { enabled: true, scope: 'global' },
         },
-        exclusions: [
-          { server: 'github', agent: 'codex', reason: 'Not needed for Codex' },
-        ],
+        exclusions: [{ server: 'github', agent: 'codex', reason: 'Not needed for Codex' }],
       };
 
       const result = validateConfigSafe(config);

@@ -59,38 +59,34 @@ export async function listCommand(
         }
       }
 
-      data.push([
-        chalk.cyan(name),
-        type,
-        chalk.gray(target),
-        server.description ?? '',
-      ]);
+      data.push([chalk.cyan(name), type, chalk.gray(target), server.description ?? '']);
     }
 
     console.log();
-    console.log(table(data, {
-      border: {
-        topBody: '',
-        topJoin: '',
-        topLeft: '',
-        topRight: '',
-        bottomBody: '',
-        bottomJoin: '',
-        bottomLeft: '',
-        bottomRight: '',
-        bodyLeft: '',
-        bodyRight: '',
-        bodyJoin: chalk.gray('│'),
-        joinBody: chalk.gray('─'),
-        joinLeft: '',
-        joinRight: '',
-        joinJoin: chalk.gray('┼'),
-      },
-      drawHorizontalLine: (index, size) => index === 1,
-    }));
+    console.log(
+      table(data, {
+        border: {
+          topBody: '',
+          topJoin: '',
+          topLeft: '',
+          topRight: '',
+          bottomBody: '',
+          bottomJoin: '',
+          bottomLeft: '',
+          bottomRight: '',
+          bodyLeft: '',
+          bodyRight: '',
+          bodyJoin: chalk.gray('│'),
+          joinBody: chalk.gray('─'),
+          joinLeft: '',
+          joinRight: '',
+          joinJoin: chalk.gray('┼'),
+        },
+        drawHorizontalLine: (index, _size) => index === 1,
+      })
+    );
 
     console.log(chalk.gray(`${servers.length} server(s) configured`));
-
   } catch (error) {
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : error}`));
     process.exit(1);

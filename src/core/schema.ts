@@ -9,11 +9,9 @@ import { z } from 'zod';
  * Supports: literal values, ${VAR} references, ${VAR:-default} patterns
  * Coerces numbers and booleans to strings for YAML convenience
  */
-export const EnvValueSchema = z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-]).transform(val => String(val));
+export const EnvValueSchema = z
+  .union([z.string(), z.number(), z.boolean()])
+  .transform((val) => String(val));
 
 export const EnvSchema = z.record(z.string(), EnvValueSchema);
 
@@ -21,21 +19,20 @@ export const EnvSchema = z.record(z.string(), EnvValueSchema);
  * Auto-approve configuration
  * Can be boolean (all or none) or array of tool names
  */
-export const AutoApproveSchema = z.union([
-  z.boolean(),
-  z.array(z.string()),
-]);
+export const AutoApproveSchema = z.union([z.boolean(), z.array(z.string())]);
 
 /**
  * Agent-specific overrides for a server
  */
-export const AgentOverrideSchema = z.object({
-  enabled: z.boolean().optional(),
-  enabledTools: z.array(z.string()).optional(),
-  disabledTools: z.array(z.string()).optional(),
-  timeout: z.number().optional(),
-  autoApprove: AutoApproveSchema.optional(),
-}).strict();
+export const AgentOverrideSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    enabledTools: z.array(z.string()).optional(),
+    disabledTools: z.array(z.string()).optional(),
+    timeout: z.number().optional(),
+    autoApprove: AutoApproveSchema.optional(),
+  })
+  .strict();
 
 /**
  * Stdio MCP Server configuration
@@ -68,10 +65,7 @@ export const HttpServerSchema = z.object({
 /**
  * Union of all server types
  */
-export const ServerSchema = z.discriminatedUnion('type', [
-  StdioServerSchema,
-  HttpServerSchema,
-]);
+export const ServerSchema = z.discriminatedUnion('type', [StdioServerSchema, HttpServerSchema]);
 
 /**
  * Agent configuration
@@ -139,7 +133,7 @@ export const SUPPORTED_AGENTS = [
   'kimi-code',
 ] as const;
 
-export type SupportedAgent = typeof SUPPORTED_AGENTS[number];
+export type SupportedAgent = (typeof SUPPORTED_AGENTS)[number];
 
 // =============================================================================
 // Agent Capabilities
@@ -162,13 +156,15 @@ export function validateConfig(config: unknown): CanonicalConfig {
   return CanonicalConfigSchema.parse(config);
 }
 
-export function validateConfigSafe(config: unknown): {
-  success: true;
-  data: CanonicalConfig
-} | {
-  success: false;
-  error: z.ZodError
-} {
+export function validateConfigSafe(config: unknown):
+  | {
+      success: true;
+      data: CanonicalConfig;
+    }
+  | {
+      success: false;
+      error: z.ZodError;
+    } {
   const result = CanonicalConfigSchema.safeParse(config);
   if (result.success) {
     return { success: true, data: result.data };

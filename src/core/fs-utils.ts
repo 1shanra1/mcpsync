@@ -26,7 +26,9 @@ export function atomicWrite(
     renameSync(tempPath, path);
   } catch (error) {
     // Clean up temp file on failure
-    try { unlinkSync(tempPath); } catch {}
+    try {
+      unlinkSync(tempPath);
+    } catch {}
     throw error;
   }
 

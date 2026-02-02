@@ -67,9 +67,9 @@ export function runCliSuccess(args: string): string {
   if (result.exitCode !== 0) {
     throw new Error(
       `CLI command failed: mcp-sync ${args}\n` +
-      `Exit code: ${result.exitCode}\n` +
-      `stdout: ${result.stdout}\n` +
-      `stderr: ${result.stderr}`
+        `Exit code: ${result.exitCode}\n` +
+        `stdout: ${result.stdout}\n` +
+        `stderr: ${result.stderr}`
     );
   }
   return result.stdout;
@@ -82,8 +82,7 @@ export function runCliFailure(args: string): ExecResult {
   const result = runCli(args);
   if (result.exitCode === 0) {
     throw new Error(
-      `CLI command should have failed: mcp-sync ${args}\n` +
-      `stdout: ${result.stdout}`
+      `CLI command should have failed: mcp-sync ${args}\n` + `stdout: ${result.stdout}`
     );
   }
   return result;
@@ -168,10 +167,7 @@ export function readCanonicalConfig(ctx: TestContext): Record<string, unknown> |
 /**
  * Write a canonical config directly (for test setup)
  */
-export function writeCanonicalConfig(
-  ctx: TestContext,
-  config: Record<string, unknown>
-): void {
+export function writeCanonicalConfig(ctx: TestContext, config: Record<string, unknown>): void {
   mkdirSync(ctx.configDir, { recursive: true });
   const content = yaml.dump(config, { indent: 2 });
   writeFileSync(ctx.configPath, content);
@@ -205,10 +201,7 @@ export function readCodexConfig(ctx: TestContext): Record<string, unknown> | nul
 /**
  * Write Claude config directly (for testing merge behavior)
  */
-export function writeClaudeConfig(
-  ctx: TestContext,
-  config: Record<string, unknown>
-): void {
+export function writeClaudeConfig(ctx: TestContext, config: Record<string, unknown>): void {
   writeFileSync(ctx.claudeConfigPath, JSON.stringify(config, null, 2) + '\n');
 }
 

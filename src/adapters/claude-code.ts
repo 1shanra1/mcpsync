@@ -40,9 +40,12 @@ type ClaudeServer = ClaudeStdioServer | ClaudeHttpServer;
 
 interface ClaudeConfig {
   mcpServers?: Record<string, ClaudeServer>;
-  projects?: Record<string, {
-    mcpServers?: Record<string, ClaudeServer>;
-  }>;
+  projects?: Record<
+    string,
+    {
+      mcpServers?: Record<string, ClaudeServer>;
+    }
+  >;
   [key: string]: unknown;
 }
 
@@ -122,10 +125,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
     }
   }
 
-  async write(
-    config: CanonicalConfig,
-    options: WriteOptions = {}
-  ): Promise<SyncResult> {
+  async write(config: CanonicalConfig, options: WriteOptions = {}): Promise<SyncResult> {
     const { scope = 'global', merge = false, force = false } = options;
     const paths = this.getConfigPaths();
     const warnings: string[] = [];
@@ -139,9 +139,9 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       }
 
       const validation = this.validate({ ...config, servers: { [serverName]: server } });
-      warnings.push(...validation.issues.filter(i => i.type === 'warning').map(i => i.message));
+      warnings.push(...validation.issues.filter((i) => i.type === 'warning').map((i) => i.message));
 
-      if (validation.issues.some(i => i.type === 'error')) {
+      if (validation.issues.some((i) => i.type === 'error')) {
         continue;
       }
 
@@ -160,7 +160,7 @@ export class ClaudeCodeAdapter extends BaseAdapter {
         if (!force) {
           throw new Error(
             `Failed to parse ${configPath}: ${error instanceof Error ? error.message : error}\n` +
-            `Fix the file manually or use --force to overwrite.`
+              `Fix the file manually or use --force to overwrite.`
           );
         }
         // force=true: proceed with empty config (backup created by atomicWrite)
