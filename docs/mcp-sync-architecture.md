@@ -390,7 +390,7 @@ Done!
 
 **Rationale:**
 1. **Target audience already has Node.js** - These are developers using coding agents
-2. **npm is frictionless** - `npm install -g mcp-sync` or `npx mcp-sync`
+2. **npm is frictionless** - `npm install -g mcpsync-cli` or `npx mcpsync-cli`
 3. **TypeScript gives type safety** - Important for config schema validation
 4. **Rich ecosystem** - YAML, TOML, JSON schema validation libraries
 5. **Familiar to contributors** - Lower barrier for community contributions
@@ -411,16 +411,16 @@ If startup time or avoiding runtime dependencies is critical:
 
 ```bash
 # Global install
-npm install -g mcp-sync
+npm install -g mcpsync-cli
 
 # Or use without installing
-npx mcp-sync init
+npx mcpsync-cli init
 ```
 
 **package.json:**
 ```json
 {
-  "name": "mcp-sync",
+  "name": "mcpsync-cli",
   "version": "1.0.0",
   "description": "Unified MCP configuration for all your coding agents",
   "bin": {

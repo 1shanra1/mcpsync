@@ -1,6 +1,6 @@
-# mcp-sync Test Suite
+# mcpsync-cli Test Suite
 
-This directory contains the test infrastructure for mcp-sync.
+This directory contains the test infrastructure for mcpsync-cli (CLI command: `mcp-sync`).
 
 ## Test Philosophy
 

@@ -1,5 +1,6 @@
-# mcp-sync
+# mcpsync-cli
 
+[![npm version](https://img.shields.io/npm/v/mcpsync-cli.svg)](https://www.npmjs.com/package/mcpsync-cli)
 [![CI](https://github.com/1shanra1/mcpsync/actions/workflows/ci.yml/badge.svg)](https://github.com/1shanra1/mcpsync/actions/workflows/ci.yml)
 
 **Unified MCP server configuration for all your coding agents.**
@@ -22,13 +23,13 @@ mcp-sync push
 ## Installation
 
 ```bash
-npm install -g mcp-sync
+npm install -g mcpsync-cli
 ```
 
 Or use without installing:
 
 ```bash
-npx mcp-sync init
+npx mcpsync-cli init
 ```
 
 ## Quick Start
@@ -224,7 +225,7 @@ servers:
 ## Programmatic Usage
 
 ```typescript
-import { ConfigManager, adapterRegistry } from 'mcp-sync';
+import { ConfigManager, adapterRegistry } from 'mcpsync-cli';
 
 // Load config
 const manager = new ConfigManager();

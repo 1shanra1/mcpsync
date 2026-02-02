@@ -1,5 +1,5 @@
 {
-  "name": "mcp-sync",
+  "name": "mcpsync-cli",
   "version": "0.1.0",
   "description": "Unified MCP server configuration for all your coding agents",
   "type": "module",
@@ -44,11 +44,11 @@
     "configuration",
     "sync"
   ],
-  "author": "",
+  "author": "Ishan Rai",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/mcp-sync.git"
+    "url": "git+https://github.com/1shanra1/mcpsync.git"
   },
   "engines": {
     "node": ">=18.0.0"
