@@ -1,6 +1,6 @@
 {
   "name": "mcpsync-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Unified MCP server configuration for all your coding agents",
   "type": "module",
   "main": "dist/index.js",
