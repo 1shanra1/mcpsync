@@ -7,8 +7,13 @@ import { z } from 'zod';
 /**
  * Environment variable definition
  * Supports: literal values, ${VAR} references, ${VAR:-default} patterns
+ * Coerces numbers and booleans to strings for YAML convenience
  */
-export const EnvValueSchema = z.string();
+export const EnvValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+]).transform(val => String(val));
 
 export const EnvSchema = z.record(z.string(), EnvValueSchema);
 

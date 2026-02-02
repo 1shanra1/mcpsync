@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { input, select, confirm } from '@inquirer/prompts';
+import { parse as parseShellArgs } from 'shell-quote';
 import { ConfigManager, createStdioServer, createHttpServer } from '../../core/config.js';
 import { StdioServer, HttpServer } from '../../core/schema.js';
 import { redactSecrets } from '../utils/redact.js';
@@ -100,11 +101,13 @@ async function interactiveAddStdio(options: AddOptions): Promise<StdioServer> {
   let args: string[] = options.args ?? [];
   if (args.length === 0) {
     const argsStr = await input({
-      message: 'Arguments (space-separated)',
+      message: 'Arguments (supports quoted strings)',
       default: '',
     });
     if (argsStr.trim()) {
-      args = argsStr.split(/\s+/);
+      const parsed = parseShellArgs(argsStr);
+      // Filter to only string entries (shell-quote can return operators)
+      args = parsed.filter((arg): arg is string => typeof arg === 'string');
     }
   }
 

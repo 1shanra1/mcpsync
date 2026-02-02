@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { createRequire } from 'module';
 import { initCommand } from './commands/init.js';
 import { addCommand } from './commands/add.js';
 import { listCommand } from './commands/list.js';
@@ -9,6 +10,9 @@ import { pushCommand } from './commands/push.js';
 import { agentsCommand } from './commands/agents.js';
 import { doctorCommand } from './commands/doctor.js';
 import { redactSecrets } from './utils/redact.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../../package.json');
 
 // =============================================================================
 // CLI Setup
@@ -19,7 +23,7 @@ const program = new Command();
 program
   .name('mcp-sync')
   .description('Unified MCP server configuration for all your coding agents')
-  .version('0.1.0')
+  .version(version)
   .option('-c, --config <path>', 'Path to config file')
   .option('-v, --verbose', 'Verbose output')
   .option('-n, --dry-run', 'Show what would be done without doing it')
