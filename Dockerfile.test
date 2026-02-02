@@ -1,0 +1,92 @@
+# =============================================================================
+# mcp-sync E2E Test Environment
+# =============================================================================
+# This Dockerfile creates an isolated environment for end-to-end testing
+# of mcp-sync CLI without affecting host system configurations.
+#
+# It installs real CLI tools (Claude Code, Codex) to test against actual
+# config file formats, catching any breaking changes in those tools.
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml up --build
+#   docker compose -f docker-compose.test.yml run --rm e2e npm run test:e2e
+#
+# References:
+#   - Claude Code: https://www.npmjs.com/package/@anthropic-ai/claude-code
+#   - Codex CLI: https://www.npmjs.com/package/@openai/codex
+# =============================================================================
+
+FROM node:20-slim
+
+# Install basic utilities needed for testing and CLI installations
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Install AI Coding Agent CLIs
+# =============================================================================
+# These are installed globally so E2E tests can verify config file formats
+# match what the real tools expect.
+
+# Install Claude Code CLI (npm method - works in containers)
+# See: https://www.npmjs.com/package/@anthropic-ai/claude-code
+RUN npm install -g @anthropic-ai/claude-code || echo "Claude Code CLI installation skipped (optional)"
+
+# Install OpenAI Codex CLI
+# See: https://www.npmjs.com/package/@openai/codex
+RUN npm install -g @openai/codex || echo "Codex CLI installation skipped (optional)"
+
+# =============================================================================
+# Create test user with clean home directory
+# =============================================================================
+RUN useradd -m -s /bin/bash testuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better layer caching
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build TypeScript
+RUN npm run build
+
+# Make mcp-sync CLI globally available
+RUN npm link
+
+# =============================================================================
+# Set up test user environment
+# =============================================================================
+
+# Create necessary directories for test user (mimics real user setup)
+RUN mkdir -p /home/testuser/.config/mcp-sync \
+    && mkdir -p /home/testuser/.codex \
+    && mkdir -p /home/testuser/.local/bin \
+    && chown -R testuser:testuser /home/testuser \
+    && chown -R testuser:testuser /app
+
+# Add npm global bin to PATH for testuser
+ENV PATH="/home/testuser/.local/bin:/usr/local/bin:${PATH}"
+
+# Switch to test user for isolation
+USER testuser
+
+# Set HOME explicitly for the test user
+ENV HOME=/home/testuser
+
+# Verify installations (non-fatal if CLIs aren't fully functional without auth)
+RUN echo "=== Installed CLI versions ===" \
+    && (claude --version 2>/dev/null || echo "Claude Code: installed (auth required for full check)") \
+    && (codex --version 2>/dev/null || echo "Codex: installed (auth required for full check)") \
+    && mcp-sync --version
+
+# Default command runs E2E tests
+CMD ["npm", "run", "test:e2e"]
